@@ -1,6 +1,5 @@
 'use client';
 import { useEffect } from "react";
-import Navbar from "../../components/Navbar";
 import HeroBanner from "../../components/HeroBanner";
 import StatsCard from "../../components/StatsCard";
 // import FloatingCTA from "../components/FloatingCTA";
@@ -19,6 +18,7 @@ export default function Home() {
   }, [fetchPlayers]);
 
   const handleAddPlayer = async (data: {
+    id : ""
     name: string
     image: string
   }): Promise<void> => {

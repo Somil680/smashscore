@@ -8,7 +8,6 @@ interface ProgressStepperProps {
 
 export default function ProgressStepper({
   step,
-  total,
   labels,
 }: ProgressStepperProps) {
     return (

@@ -27,91 +27,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         : [...prev, player]
     )
   }
-//   function handleAddTeam() {
-//     const p1 = allPlayers.filter((item) => item.id === selected[0])[0].name
 
-//     const p2 =
-//       selected.length === 1
-//         ? ''
-//         : '&' + allPlayers.filter((item) => item.id === selected[1])[0].name
-//     setTeams([...teams, { id: `${p1}${p2} `, players: [...selected] }])
-//     setSelected([])
-//     if (selected.length === 2) {
-//     }
-//   }
-//   function handleRemoveTeam(id: string) {
-//     setTeams(teams.filter((t) => t.id !== id))
-//   }
-//   const availablePlayers = allPlayers.filter(
-//     (p) => !teams.some((t) => t.players.includes(p.id))
-//   )
-//   const handleAutoGenerateTeams = () => {
-//     // Auto-generate teams from availablePlayers
-//     const newTeams = []
-//     let ids = availablePlayers.map((p) => p.id)
-//     ids = ids.sort(() => Math.random() - 0.5)
-//     while (ids.length >= 2) {
-//       const p1 = allPlayers.filter((item) => item.id === ids[0])[0].name
-//       const p2 =
-//         selected.length === 1
-//           ? ''
-//           : '&' + allPlayers.filter((item) => item.id === ids[1])[0].name
-//       newTeams.push({
-//         id: `${p1}${p2} `,
-//         players: [ids[0], ids[1]],
-//       })
-//       ids = ids.slice(2)
-//     }
-//     // If one player left, make a single-player team
-//     if (ids.length === 1) {
-//       newTeams.push({
-//         id: allPlayers.filter((item) => item.id === ids[0])[0].name,
-//         players: [ids[0]],
-//       })
-//     }
-//     setTeams([...teams, ...newTeams])
-//     setSelected([])
-//   }
-
-//   const handleNext = async () => {
-//       // 1. Create team IDs + new teams
-//       const player = allPlayers.find((p) => p.id === playerId)!
-
-//     const newTeams = teams.map((team) => ({
-//       id: uuidv4(),
-//       name: team.id,
-//       players_id: team.players,
-//       totalPointsScored: 0,
-//     }))
-//     // console.log('🚀 ~ newTeams ~ newTeams:', newTeams)
-
-//     // 2. Add all teams in parallel
-//     // await Promise.all(newTeams.map((team) => addTeam(team)))
-
-//     // 3. Optional: Update tournament with team IDs
-//     // const teamIds = newTeams.map((team) => team.id)
-//     assignPlayersToTournament(currentTournamentId ?? '', selected)
-
-//     // 4. Generate fixtures with actual teams
-//     const fixtures = generateFixtures('round-robin', selected)
-
-//     // 5. Create match objects from fixtures
-//     const newMatches = fixtures.map((f) => ({
-//       id: '',
-//       tournamentId: currentTournamentId ?? '',
-//       team1Id: f.playerA.id,
-//       team2Id: f.playerB.id,
-//       team1_score: [],
-//       team2_score: [],
-//     }))
-
-//     // 6. Add all matches in parallel
-//     await Promise.all(newMatches.map((match) => addMatch(match)))
-
-//     // 7. Proceed
-//     console.log('🚀 ~ handleNext ~ tournaments:', tournaments)
-//     onNext()
-//   }
   const handleNext = async () => {
     // Instead of creating manual teams for singles:
     const selectedPlayers = selected // already filtered
@@ -180,59 +96,8 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
               {player.name}
             </span>
           </button>
-        ))}
-              
-
-
-               
+        ))}           
       </div>
-      {/* <div className="flex justify-between gap-2">
-        <Button
-          className="flex-1"
-          onClick={handleAddTeam}
-          disabled={!(selected.length === 2 || availablePlayers.length === 1)}
-        >
-          Add Team {!(selected.length === 2 || availablePlayers.length === 1)}
-        </Button>
-        <Button
-          onClick={handleAutoGenerateTeams}
-          disabled={availablePlayers.length < 1}
-          variant={'secondary'}
-        >
-          <Sparkles size={20} />
-          Auto
-        </Button>
-      </div> */}
-      {/* <div className="w-full mt-6">
-        <h3 className="text-lg font-semibold text-white mb-2">Teams</h3>
-        <div className="flex flex-wrap gap-4">
-          {teams.map((team) => (
-            <div
-              key={team.id}
-              className="flex items-center gap-2 bg-[#232c3b] rounded-xl px-4 py-2"
-            >
-              {team.players.map((pid) => {
-                const p = allPlayers.find((pl) => pl.id === pid)
-                return (
-                  <span
-                    key={pid}
-                    className="flex items-center gap-1 text-white font-medium"
-                  >
-                    {p?.name}
-                  </span>
-                )
-              })}
-              <button
-                className="ml-2 text-xs text-red-400 hover:text-red-600"
-                onClick={() => handleRemoveTeam(team.id)}
-                type="button"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-      </div> */}
       <Button type="button" onClick={handleNext}>
         Next
       </Button>
