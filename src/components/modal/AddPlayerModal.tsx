@@ -1,5 +1,6 @@
+'use client'
 import * as React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
 
 // Example avatar list (replace with your actual avatar asset paths)

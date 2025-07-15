@@ -1,20 +1,32 @@
 'use client';
-import Navbar from "../components/Navbar";
-import HeroBanner from "../components/HeroBanner";
-import StatsCard from "../components/StatsCard";
+import { useEffect } from "react";
+import Navbar from "../../components/Navbar";
+import HeroBanner from "../../components/HeroBanner";
+import StatsCard from "../../components/StatsCard";
 // import FloatingCTA from "../components/FloatingCTA";
 import FloatingCTAWithModal from "@/components/FloatingCTAWithModal";
+import { useSmashScoreStore } from "@/store/useSmashScoreStore";
 
 export default function Home() {
+  const addPlayer = useSmashScoreStore((s) => s.addPlayer);
+  const fetchPlayers = useSmashScoreStore((s) => s.fetchPlayers);
 
-  function handleAddPlayer(data: { name: string; image: string; }): void {
-    console.log("🚀 ~ handleAddPlayer ~ data:", data)
-    throw new Error("Function not implemented.");
+  useEffect(() => {
+    fetchPlayers().then(() => {
+      const players = useSmashScoreStore.getState().players;
+      console.log("Fetched players:", players);
+    });
+  }, [fetchPlayers]);
+
+  const handleAddPlayer = async (data: {
+    name: string
+    image: string
+  }): Promise<void> => {
+    await addPlayer(data)
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex flex-col">
-      <Navbar />
+    <div className="flex flex-col">
       <HeroBanner />
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-10 grid gap-8 md:grid-cols-3">
         <StatsCard

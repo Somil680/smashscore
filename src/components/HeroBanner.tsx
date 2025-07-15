@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HeroBanner() {
   return (
     <section className="flex flex-col items-center justify-center text-center py-12 px-4 md:py-20 md:px-0 bg-gradient-to-br from-lime-100 via-white to-blue-100 dark:from-[#0a0a0a] dark:via-[#171717] dark:to-[#0a0a0a] relative">
@@ -8,9 +10,9 @@ export default function HeroBanner() {
       <p className="max-w-xl text-lg md:text-2xl text-gray-600 dark:text-gray-300 mb-8">
         Effortlessly manage players, create tournaments, and track live match scores. Your game, your stats, your story.
       </p>
-      <a href="#start-match" className="inline-block bg-gradient-to-tr from-lime-400 to-blue-500 text-white font-semibold rounded-full px-8 py-3 shadow-lg hover:scale-105 transition-transform text-lg">
+      <Link href="start-match" className="inline-block bg-gradient-to-tr from-lime-400 to-blue-500 text-white font-semibold rounded-full px-8 py-3 shadow-lg hover:scale-105 transition-transform text-lg">
         Start a Match
-      </a>
+      </Link>
     </section>
   );
 }

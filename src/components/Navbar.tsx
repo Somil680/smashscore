@@ -14,10 +14,10 @@ export default function Navbar() {
         <a href="#tournaments" className="hover:text-blue-500 transition">Tournaments</a>
         <a href="#analysis" className="hover:text-lime-500 transition">Analysis</a>
       </div>
-      <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+      {/* <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
         <span className="sr-only">Open menu</span>
         <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </button>
+      </button> */}
     </nav>
   );
 }
