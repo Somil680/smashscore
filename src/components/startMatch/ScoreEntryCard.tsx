@@ -1,36 +1,106 @@
-
 'use client'
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Crown } from 'lucide-react'
-import { useSmashScoreStore } from '@/store/useSmashScoreStore'
+import { getTeamDetails } from '@/hooks/helperFunction'
+// import { Crown } from 'lucide-react'
 
 export interface Player {
   id: string
   name: string
+  image_url?: string
 }
 
-interface ScoreEntryCardProps {
-  playerA: string
-  playerB: string
-  matchNumber: number
-  isFinal?: boolean
+export interface Team {
+  id: string
+  player_1_id: string
+  player_2_id?: string
+}
+
+export interface TeamWithPlayers extends Team {
+  player_1: Player
+  player_2: Player | null // player_2 is null for singles
+}
+export interface Match {
+  id: string
+  team_1_id: string
+  team_2_id: string
+  winner_team_id?: string
+  tournament_id: string
+  tag?: string
+  // ... other match properties
+}
+export interface MatchWithDetails {
+  id: string
+  tournament_id: string
+  tag?: string
+  team_1: TeamWithPlayers
+  team_2: TeamWithPlayers
+  // other match fields...
+}
+
+// Props for our new ScoreCard component
+interface ScoreCardProps {
+  match: MatchWithDetails
   max_game_set: number
-  onSave: (scores: { a: number[]; b: number[] }, winnerId: string) => void
+  onSave: (
+    match: Match,
+    scoresToSave: {
+      game_number: number
+      team_1_score: number
+      team_2_score: number
+    }[],
+    winnerTeamId: string
+  ) => void
 }
 
 export default function ScoreEntryCard({
-  playerA,
-  playerB,
-  matchNumber,
-  isFinal = false,
-  max_game_set,
+  match,
   onSave,
-}: ScoreEntryCardProps) {
-  const { teams } = useSmashScoreStore()
+  max_game_set,
+}: ScoreCardProps) {
+  //   const Team1 = {
+  //     name: `${match.team_1.player_1.name} ${
+  //       match.team_1.player_2 !== null  ?  `& ${match.team_1.player_2.name} ` : ""
+  //     } `,
+  //     image: [
+  //       `${match.team_1.player_1.image_url}`,
+  //       ` ${
+  //         match.team_1.player_2 !== null ?  ` ${match.team_1.player_2.image_url}` : ""
+  //       } `,
+  //     ],
+  //   }
+  //   console.log("🚀 ~ ScoreEntryCard ~ Team1:", Team1)
+  //   const Team2 = {
+  //     name: `${match.team_2.player_1.name} ${
+  //       match.team_2.player_2 !== null ? `& ${match.team_2.player_2.name} ` : ''
+  //     } `,
+  //     image: [
+  //       `${match.team_2.player_1.image_url}`,
+  //       ` ${match.team_2.player_2  !== null ? ` ${match.team_2.player_2.image_url}` : ""} `,
+  //     ],
+  //   }
+  //   console.log("🚀 ~ ScoreEntryCard ~ Team2:", Team2)
 
-  const playerAObj = teams.find((p) => p.id === playerA)
-  const playerBObj = teams.find((p) => p.id === playerB)
+  // --- Helper function to get the display name for a team ---
+  //   const getTeamName = (team: Partial<TeamWithPlayers>) => {
+  //     // Defensive Check: If team or player_1 object is missing, fallback gracefully.
+  //     if (!team || !team.player_1) {
+  //       return `Team (${team?.id?.substring(0, 6)}...)` || 'TBA'
+  //     }
+
+  //     // For doubles, show both player names, but check if player_2 exists.
+  //     if (team.player_2) {
+  //       return `${team.player_1.name} & ${team.player_2.name}`
+  //     }
+
+  //     // For singles, show the single player's name.
+  //     return team.player_1.name
+  //   }
+
+
+  const team1Details = getTeamDetails(match.team_1)
+  const team2Details = getTeamDetails(match.team_2)
 
   const [scoresA, setScoresA] = React.useState<number[]>([])
   const [scoresB, setScoresB] = React.useState<number[]>([])
@@ -42,7 +112,7 @@ export default function ScoreEntryCard({
     setScoresB(Array(max_game_set).fill(0))
     setCompleted(false)
     setWinner(null)
-  }, [max_game_set, playerA, playerB])
+  }, [max_game_set])
 
   function handleChange(idx: number, val: string, which: 'a' | 'b') {
     const v = Math.max(0, parseInt(val) || 0)
@@ -55,18 +125,22 @@ export default function ScoreEntryCard({
 
   function handleSave() {
     const winsA = scoresA.filter((a, i) => a > scoresB[i]).length
-    console.log("🚀 ~ handleSave ~ winsA:", winsA)
+    console.log('🚀 ~ handleSave ~ winsA:', winsA)
     const winsB = scoresB.filter((b, i) => b > scoresA[i]).length
-    console.log("🚀 ~ handleSave ~ winsB:", winsB)
-    const winnerId = winsA > winsB ? playerA : winsA < winsB ? playerB :"Draw"
-    console.log(
-      '🚀 ~ handleSave ~ winnerId:',
-      winnerId,
-      winsA > winsB,
-      winsA < winsB
-    )
-    onSave({ a: scoresA, b: scoresB }, winnerId)
-    setWinner(winnerId)
+    console.log('🚀 ~ handleSave ~ winsB:', winsB)
+    const winnerId =
+      winsA > winsB
+        ? team1Details.teamId
+        : winsA < winsB
+        ? team2Details.teamId
+        : 'Draw'
+    const scoresToSave = scoresA.map((s1, index) => ({
+      game_number: index + 1,
+      team_1_score: s1,
+      team_2_score: scoresB[index],
+    }))
+    onSave(match, scoresToSave, winnerId ?? '')
+    setWinner(winnerId ?? '')
     setCompleted(true)
   }
 
@@ -80,36 +154,34 @@ export default function ScoreEntryCard({
         completed ? 'border-lime-400' : 'border-blue-400'
       } transition-all duration-300`}
     >
-      {completed && winner && (
+      {/* {completed && winner && (
         <div className="absolute inset-0 z-0 pointer-events-none">
-          {/* <SparklesCore
+          <SparklesCore
             background="transparent"
             minSize={0.6}
             maxSize={1.4}
             particleDensity={90}
             className="w-full h-full"
             particleColor="#FFD700"
-          /> */}
+          />
         </div>
-      )}
+      )} */}
 
       <div className="w-full flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-500">
-          🏷 Match {matchNumber}
-        </span>
-        {isFinal && (
+        <span className="text-sm font-medium text-gray-500">{match.tag}</span>
+        {/* {isFinal && (
           <span className="text-sm font-bold px-3 py-1 bg-gradient-to-tr from-yellow-400 to-orange-500 text-white rounded-full shadow">
             FINAL MATCH 🏆
           </span>
-        )}
+        )} */}
       </div>
 
       <div className="flex gap-8 items-center text-xl font-bold relative z-10">
         <div className="flex flex-col items-center gap-2 relative">
           <span className="text-gray-900 dark:text-white text-base font-semibold mt-1">
-            {playerAObj?.name}
+            {team1Details.teamName.toUpperCase()}
           </span>
-          {winner === playerA && (
+          {winner === team1Details.teamId && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -123,9 +195,9 @@ export default function ScoreEntryCard({
         <span className="text-2xl text-gray-400 font-extrabold">vs</span>
         <div className="flex flex-col items-center gap-2 relative">
           <span className="text-gray-900 dark:text-white text-base font-semibold mt-1">
-            {playerBObj?.name}
+            {team2Details.teamName.toUpperCase()}
           </span>
-          {winner === playerB && (
+          {winner === team2Details.teamId && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -144,7 +216,7 @@ export default function ScoreEntryCard({
             <input
               type="number"
               min={0}
-            //   value={scoresA[i] }
+              //   value={scoresA[i] }
               onChange={(e) => handleChange(i, e.target.value, 'a')}
               className="w-16 rounded-lg border-2 border-blue-200 dark:border-blue-700 bg-white/80 dark:bg-[#232c3b] px-2 py-2 text-center font-bold text-blue-600 dark:text-lime-400 text-lg shadow focus:ring-2 focus:ring-lime-400 transition-all"
               disabled={completed}
@@ -155,7 +227,7 @@ export default function ScoreEntryCard({
             <input
               type="number"
               min={0}
-            //   value={scoresB[i]}
+              //   value={scoresB[i]}
               onChange={(e) => handleChange(i, e.target.value, 'b')}
               className="w-16 rounded-lg border-2 border-lime-200 dark:border-lime-600 bg-white/80 dark:bg-[#232c3b] px-2 py-2 text-center font-bold text-lime-600 dark:text-blue-400 text-lg shadow focus:ring-2 focus:ring-blue-400 transition-all"
               disabled={completed}

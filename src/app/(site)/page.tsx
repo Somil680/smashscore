@@ -1,28 +1,26 @@
 'use client';
-import { useEffect } from "react";
+import { useBadmintonStore } from "@/store/useBadmintonStore";
 import HeroBanner from "../../components/HeroBanner";
 import StatsCard from "../../components/StatsCard";
 // import FloatingCTA from "../components/FloatingCTA";
 import FloatingCTAWithModal from "@/components/FloatingCTAWithModal";
-import { useSmashScoreStore } from "@/store/useSmashScoreStore";
 
 export default function Home() {
-  const addPlayer = useSmashScoreStore((s) => s.addPlayer);
-  const fetchPlayers = useSmashScoreStore((s) => s.fetchPlayers);
+  const {addPlayer} = useBadmintonStore() ;
+  // const fetchPlayers = useSmashScoreStore((s) => s.fetchPlayers);
 
-  useEffect(() => {
-    fetchPlayers().then(() => {
-      const players = useSmashScoreStore.getState().players;
-      console.log("Fetched players:", players);
-    });
-  }, [fetchPlayers]);
+  // useEffect(() => {
+  //   fetchPlayers().then(() => {
+  //     const players = useSmashScoreStore.getState().players;
+  //     console.log("Fetched players:", players);
+  //   });
+  // }, [fetchPlayers]);
 
   const handleAddPlayer = async (data: {
-    id : ""
     name: string
     image: string
   }): Promise<void> => {
-    await addPlayer(data)
+    await addPlayer(data.name , data.image)
   }
 
   return (

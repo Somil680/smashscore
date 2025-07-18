@@ -3,17 +3,17 @@ import React, { useState } from 'react'
 import TournamentFormatSelector, {
 } from '@/components/startMatch/TournamentFormatSelector'
 import ProgressStepper from '@/components/startMatch/ProgressStepper'
-import { useSmashScoreStore } from '@/store/useSmashScoreStore'
 import TeamBuilder from '@/components/startMatch/TeamBuilder'
 import MatchCreate from '@/components/startMatch/MatchCreate'
 import PlayerSelector from '@/components/startMatch/PlayerSelector'
+import { useBadmintonStore } from '@/store/useBadmintonStore'
 
 const STEPS = ['Tournament', 'Players', 'Fixtures']
 
 export default function StartMatchPage() {
 
   const [step, setStep] = useState(0)
-  const {players , tournaments} = useSmashScoreStore()
+  const {players , tournaments , } = useBadmintonStore()
 
   return (
     <div className=" flex flex-col  py-4 px-4">

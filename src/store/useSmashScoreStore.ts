@@ -319,7 +319,7 @@
 //         const match = state.matches[matchIndex]
 //         const totalTeam1 = scores.a.reduce((acc, val) => acc + val, 0)
 //         const totalTeam2 = scores.b.reduce((acc, val) => acc + val, 0)
-      
+
 //         const diffA = totalTeam1 - totalTeam2 // Could be negative
 //         const diffB = totalTeam2 - totalTeam1 // Opposite of above
 //         return {
@@ -442,8 +442,10 @@ export type Match = {
   team2Id: string
   team1_score: number[]
   team2_score: number[]
+  tag: string
   winnerteam_id: string
   synced: boolean
+  createdAt: Date
 }
 
 export interface SmashScoreState {
@@ -459,8 +461,18 @@ export interface SmashScoreState {
     max_game_set: number
     points_per_game: number
   }
+  tieBreakerStarted: boolean
+  topPlayerForFinal: string[]
+  setTopPlayerForFinal: (winnerId: string[]) => void
+  setTieBreakerStarted: (flag: boolean) => void
+
   setInitialTournament: (data: SmashScoreState['initialTournament']) => void
 
+  addDataToDatabase: (
+    tournaments: Tournament[],
+    matches: Match[],
+    teams: Teams[]
+  ) => void
   addTeam: (team: Omit<Teams, 'createdAt'>) => void
   addPlayer: (
     player: Omit<
@@ -479,13 +491,13 @@ export interface SmashScoreState {
   ) => void
   deletePlayer: (id: string) => void
   updatePlayerStats: (
-    id: string,
-    stats: Partial<
-      Pick<
-        Player,
-        'matchesPlayed' | 'matchesWon' | 'highestScore' | 'totalPointsScored'
-      >
-    >
+    id: string[]
+    // stats: Partial<
+    //   Pick<
+    //     Player,
+    //     'matchesPlayed' | 'matchesWon' | 'highestScore' | 'totalPointsScored'
+    //   >
+    // >
   ) => void
 
   addTournament: (tournament: Omit<Tournament, 'createdAt' | 'synced'>) => void
@@ -521,6 +533,25 @@ export const useSmashScoreStore = create<SmashScoreState>()((set) => ({
     max_game_set: 3,
     points_per_game: 21,
   },
+  tieBreakerStarted: false,
+  topPlayerForFinal: [],
+  setTieBreakerStarted: (flag: boolean) => set({ tieBreakerStarted: flag }),
+  setTopPlayerForFinal: (winnweId) =>
+    set((state) => {
+      const matchIndex = state.matches.findIndex((m) => m.tag === 'Final Match')
+      console.log('🚀 ~ set ~ winnweId:', winnweId)
+      if (matchIndex === -1) return state
+      return {
+        matches: state.matches.map((m) =>
+          m.tag === 'Final Match'
+            ? {
+                ...m,
+                team2Id: winnweId[0],
+              }
+            : m
+        ),
+      }
+    }),
 
   setInitialTournament: (data) =>
     set(() => ({ initialTournament: { ...data } })),
@@ -562,10 +593,152 @@ export const useSmashScoreStore = create<SmashScoreState>()((set) => ({
   deletePlayer: (id) =>
     set((state) => ({ players: state.players.filter((p) => p.id !== id) })),
 
-  updatePlayerStats: (id, stats) =>
-    set((state) => ({
-      players: state.players.map((p) => (p.id === id ? { ...p, ...stats } : p)),
-    })),
+  // updatePlayerStats: (id, stats) =>
+  //   set((state) => ({
+  //     players: state.players.map((p) => (p.id === id ? { ...p, ...stats } : p)),
+  //   })),
+  // updatePlayerStats: () =>
+  //   set((state) => {
+  //     const currentTournament = state.tournaments.find(
+  //       (t) => t.id === state.currentTournamentId
+  //     )
+  //     if (!currentTournament) return state
+
+  //     const allowedPlayerIds = state.teams
+  //       .filter((team) => currentTournament.teams_Id.includes(team.id))
+  //       .flatMap((team) => team.players_id)
+
+  //     if (!allowedPlayerIds.includes(id)) return state
+
+  //     // Calculate player stats from matches
+  //     const relevantMatches = state.matches.filter((match) => {
+  //       const team = state.teams.find(
+  //         (t) =>
+  //           currentTournament.teams_Id.includes(t.id) &&
+  //           t.players_id.includes(id)
+  //       )
+  //       return (
+  //         match.tournamentId === currentTournament.id &&
+  //         (match.team1Id === team?.id || match.team2Id === team?.id)
+  //       )
+  //     })
+
+  //     const matchesPlayed = relevantMatches.length
+  //     const matchesWon = relevantMatches.filter((match) => {
+  //       const team = state.teams.find((t) => t.players_id.includes(id))
+  //       return match.winnerteam_id === team?.id
+  //     }).length
+
+  //     const totalPointsScored = relevantMatches.reduce((acc, match) => {
+  //       const team = state.teams.find((t) => t.players_id.includes(id))
+  //       if (match.team1Id === team?.id) {
+  //         return acc + match.team1_score.reduce((a, b) => a + b, 0)
+  //       }
+  //       if (match.team2Id === team?.id) {
+  //         return acc + match.team2_score.reduce((a, b) => a + b, 0)
+  //       }
+  //       return acc
+  //     }, 0)
+
+  //     const highestScore = relevantMatches.reduce((max, match) => {
+  //       const team = state.teams.find((t) => t.players_id.includes(id))
+  //       const score =
+  //         match.team1Id === team?.id
+  //           ? Math.max(...match.team1_score)
+  //           : match.team2Id === team?.id
+  //           ? Math.max(...match.team2_score)
+  //           : 0
+  //       return Math.max(max, score)
+  //     }, 0)
+
+  //     return {
+  //       players: state.players.map((p) =>
+  //         p.id === id
+  //           ? {
+  //               ...p,
+  //               matchesPlayed,
+  //               matchesWon,
+  //               totalPointsScored,
+  //               highestScore:
+  //                 highestScore > p.highestScore ? highestScore : p.highestScore,
+  //             }
+  //           : p
+  //       ),
+  //     }
+  //   }),
+  updatePlayerStats: (ids: string[]) =>
+    set((state) => {
+      console.log('🚀 ~ set ~ updatePlayerStats:', ids)
+      const currentTournament = state.tournaments.find(
+        (t) => t.id === state.currentTournamentId
+      )
+      console.log('🚀 ~ set ~ currentTournament:', currentTournament)
+      if (!currentTournament) return state
+
+      const allowedPlayerIds = state.players
+        .filter((team) => ids.includes(team.id))
+        .flatMap((team) => team.id)
+
+      console.log('🚀 ~ set ~ allowedPlayerIds:', allowedPlayerIds)
+      const validIds = ids.filter((id) => allowedPlayerIds.includes(id))
+      console.log('🚀 ~ set ~ validIds:', validIds)
+
+      const updatedPlayers = state.players.map((player) => {
+        if (!validIds.includes(player.id)) return player
+
+        // Get all matches for this player's team(s)
+        const playerTeams = state.teams.filter((team) =>
+          team.players_id.includes(player.id)
+        )
+        const playerTeamIds = playerTeams.map((team) => team.id)
+        console.log('🚀 ~ updatedPlayers ~ playerTeamIds:', playerTeamIds)
+
+        const relevantMatches = state.matches.filter(
+          (match) =>
+            match.tournamentId === currentTournament.id &&
+            (playerTeamIds.includes(match.team1Id) ||
+              playerTeamIds.includes(match.team2Id))
+        )
+        console.log('🚀 ~ updatedPlayers ~ relevantMatches:', relevantMatches)
+
+        const matchesPlayed = relevantMatches.length
+
+        const matchesWon = relevantMatches.filter((match) =>
+          playerTeamIds.includes(match.winnerteam_id)
+        ).length
+
+        const totalPointsScored = relevantMatches.reduce((acc, match) => {
+          if (playerTeamIds.includes(match.team1Id)) {
+            return acc + match.team1_score.reduce((a, b) => a + b, 0)
+          } else if (playerTeamIds.includes(match.team2Id)) {
+            return acc + match.team2_score.reduce((a, b) => a + b, 0)
+          }
+          return acc
+        }, 0)
+
+        const highestScore = relevantMatches.reduce((max, match) => {
+          if (playerTeamIds.includes(match.team1Id)) {
+            return Math.max(max, ...match.team1_score)
+          } else if (playerTeamIds.includes(match.team2Id)) {
+            return Math.max(max, ...match.team2_score)
+          }
+          return max
+        }, 0)
+
+        return {
+          ...player,
+          matchesPlayed,
+          matchesWon,
+          totalPointsScored,
+          highestScore:
+            highestScore > player.highestScore
+              ? highestScore
+              : player.highestScore,
+        }
+      })
+
+      return { players: updatedPlayers }
+    }),
 
   addTournament: async (tournament) => {
     const newTournament: Tournament = {
@@ -599,6 +772,7 @@ export const useSmashScoreStore = create<SmashScoreState>()((set) => ({
       ...match,
       id: uuidv4(),
       winnerteam_id: '',
+      createdAt: new Date(),
       synced: false,
     }
     set((state) => ({ matches: [...state.matches, newMatch] }))
@@ -614,7 +788,7 @@ export const useSmashScoreStore = create<SmashScoreState>()((set) => ({
       const totalTeam2 = scores.b.reduce((acc, val) => acc + val, 0)
       const diffA = totalTeam1 - totalTeam2
       const diffB = totalTeam2 - totalTeam1
-
+      //  const updateFinalId = state.matches[state.matches.length-1].winnerteam_id
       return {
         matches: state.matches.map((m) =>
           m.id === matchId
@@ -626,6 +800,7 @@ export const useSmashScoreStore = create<SmashScoreState>()((set) => ({
               }
             : m
         ),
+
         teams: state.teams.map((team) => {
           if (team.id === match.team1Id) {
             return {
@@ -656,6 +831,16 @@ export const useSmashScoreStore = create<SmashScoreState>()((set) => ({
       currentMatchId: undefined,
     })),
 
+  addDataToDatabase: async (tournaments, matches, teams) => {
+    const { error: tournamentsError } = await supabase
+      .from('tournaments')
+      .insert(tournaments)
+    const { error: matchesError } = await supabase.from('matches').insert(matches)
+    const { error: teamsError } = await supabase.from('teams').insert(teams)
+    console.log('🚀 ~ addDataToDatabase: ~ tournaments:', tournamentsError)
+    console.log('🚀 ~ addDataToDatabase: ~ matchesError:', matchesError)
+    console.log('🚀 ~ addDataToDatabase: ~ teamsError:', teamsError)
+  },
   fetchPlayers: async () => {
     const { data, error } = await supabase.from('players').select('*')
     if (!error && data) set({ players: data })

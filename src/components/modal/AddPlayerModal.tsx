@@ -9,7 +9,7 @@ const AVATARS = Array.from({ length: 16 }, (_, i) => `/avatars/avatar${i + 1}.gi
 export interface AddPlayerModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { id : "" , name: string; image: string }) => void;
+  onSubmit: (data: { name: string; image: string }) => void;
 }
 
 export const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ open, onClose, onSubmit }) => {
@@ -37,7 +37,7 @@ export const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ open, onClose, o
     e.preventDefault();
     setTouched(true);
     if (!name.trim()) return;
-    onSubmit({ id: '', name: name.trim(), image })
+    onSubmit({ name: name.trim(), image })
     onClose();
   };
 

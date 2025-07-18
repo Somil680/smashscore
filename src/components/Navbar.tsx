@@ -10,7 +10,7 @@ export default function Navbar() {
         </span>
       </div>
       <div className="hidden md:flex gap-8 text-base font-medium">
-        <a href="#players" className="hover:text-lime-500 transition">Players</a>
+        <a href="/player" className="hover:text-lime-500 transition">Players</a>
         <a href="#tournaments" className="hover:text-blue-500 transition">Tournaments</a>
         <a href="#analysis" className="hover:text-lime-500 transition">Analysis</a>
       </div>

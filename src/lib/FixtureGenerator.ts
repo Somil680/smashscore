@@ -1,47 +1,50 @@
 // utils/generateFixtures.ts
 
+
 export interface Team {
   id: string
-  name: string
+  player_1_id: string
+  player_2_id?: string
+  created_at: string
 }
-export interface Player {
-    id: string
-  name: string
-}
- 
 export interface Fixture {
-  playerA : Player
-  playerB: Player
+  playerA : string
+  playerB: string
 }
 /**
  * Generate match fixtures based on tournament type and teams
  * @param type - Tournament type: 'knockout', 'league', or 'round-robin'
  * @param teams - Array of team objects with at least a `name` property
  * @returns Array of fixtures
- */
+*/
+// const activeTeams = useActiveTournamentTeams()
 export function generateFixtures(
   type: 'knockout' | 'league' | 'round-robin',
-  teams: Team[] 
+  teams: (Team| null)[] 
 ): Fixture[] {
-  const fixtures: Fixture[] = []
+  const validTeams = teams.filter((team): team is Team => team !== null)
 
-  if (teams.length < 2) return fixtures
+  const fixtures: Fixture[] = []
+  if (validTeams === null) return  fixtures
+
+
+  if (validTeams.length < 2) return fixtures
 
   if (type === 'knockout') {
-    for (let i = 0; i < teams.length; i += 2) {
-      if (teams[i + 1]) {
+    for (let i = 0; i < validTeams.length; i += 2) {
+      if (validTeams[i + 1]) {
         fixtures.push({
-          playerA: { name: teams[i].name, id: teams[i].id },
-          playerB: { name: teams[i + 1].name, id: teams[i + 1].id },
+          playerA: validTeams[i].id   ,
+          playerB: validTeams[i+1].id ,
         })
       }
     }
   } else if (type === 'league' || type === 'round-robin') {
-    for (let i = 0; i < teams.length; i++) {
-      for (let j = i + 1; j < teams.length; j++) {
+    for (let i = 0; i < validTeams.length; i++) {
+      for (let j = i + 1; j < validTeams.length; j++) {
         fixtures.push({
-          playerA: { name: teams[i].name, id: teams[i].id },
-          playerB: { name: teams[j].name, id: teams[j].id },
+          playerA: validTeams[i].id,
+          playerB: validTeams[j].id,
         })
       }
     }

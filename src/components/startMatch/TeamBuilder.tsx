@@ -1,30 +1,21 @@
 import React, { useState } from 'react'
-import { useSmashScoreStore } from '@/store/useSmashScoreStore'
 import { Button } from '../ui/button'
 import { Sparkles } from 'lucide-react'
-import { v4 as uuidv4 } from 'uuid'
+import { Team, useBadmintonStore } from '@/store/useBadmintonStore'
+import { createAndRegisterTeam } from '@/hooks/createAndRegisterTeam'
 import { generateFixtures } from '@/lib/FixtureGenerator'
-
-interface Team {
-  id: string
-  players: string[]
-}
 
 interface TeamBuilderProps {
   allPlayers: { id: string; name: string; image?: string }[]
-  onNext: () => void
+    onNext: () => void
+   activePlayers : Team[]
 }
 
 export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
+  const { activeTournamentId, setActiveTeams, addMatch } =
+    useBadmintonStore()
   const [selected, setSelected] = useState<string[]>([])
-  const {
-    addTeam,
-      addMatch,
-    tournaments,
-      currentTournamentId,
-      assignPlayersToTournament,
-  } = useSmashScoreStore()
-  const [teams, setTeams] = useState<Team[]>([])
+  const [team, setTeams] = useState<string[][]>([])
 
   function handleSelect(player: string) {
     setSelected((prev) =>
@@ -33,95 +24,83 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         : [...prev, player]
     )
   }
-  function handleAddTeam() {
-    const p1 = allPlayers.filter((item) => item.id === selected[0])[0].name
+  const handleAddTeam = async () => {
+    setTeams([...team, selected])
+    setSelected([])
+  }
 
-    const p2 =
-      selected.length === 1
-        ? ''
-        : '&' + allPlayers.filter((item) => item.id === selected[1])[0].name
-    setTeams([...teams, { id: `${p1}${p2} `, players: [...selected] }])
-    setSelected([])
-    if (selected.length === 2) {
-    }
+  const handleRemoveTeam = (rowIndex: number) => {
+    setTeams(team.filter((_, index) => index !== rowIndex))
   }
-  function handleRemoveTeam(id: string) {
-    setTeams(teams.filter((t) => t.id !== id))
-  }
+
+  // const availablePlayers = allPlayers.filter(
+  //   (p) => !teams.some((t) => t.players.includes(p.id))
+  //   )
   const availablePlayers = allPlayers.filter(
-    (p) => !teams.some((t) => t.players.includes(p.id))
+    (num) => !team.flat().includes(num.id)
   )
-  const handleAutoGenerateTeams = () => {
-    // Auto-generate teams from availablePlayers
-    const newTeams = []
-    let ids = availablePlayers.map((p) => p.id)
-    ids = ids.sort(() => Math.random() - 0.5)
-    while (ids.length >= 2) {
-      const p1 = allPlayers.filter((item) => item.id === ids[0])[0].name
-      const p2 =selected.length === 1 ? '': '&' + allPlayers.filter((item) => item.id === ids[1])[0].name
-      newTeams.push({
-        id: `${p1}${p2} `,
-        players: [ids[0], ids[1]],
-      })
-      ids = ids.slice(2)
-    }
-    // If one player left, make a single-player team
-    if (ids.length === 1) {
-      newTeams.push({
-        id: allPlayers.filter((item) => item.id === ids[0])[0].name,
-        players: [ids[0]],
-      })
-    }
-    setTeams([...teams, ...newTeams])
-    setSelected([])
-  }
+
+  // const handleAutoGenerateTeams = () => {
+  //   // Auto-generate teams from availablePlayers
+  //   const newTeams = []
+  //   let ids = availablePlayers.map((p) => p.id)
+  //   ids = ids.sort(() => Math.random() - 0.5)
+  //   while (ids.length >= 2) {
+  //     const p1 = allPlayers.filter((item) => item.id === ids[0])[0].name
+  //     const p2 =
+  //       selected.length === 1
+  //         ? ''
+  //         : '&' + allPlayers.filter((item) => item.id === ids[1])[0].name
+  //     newTeams.push({
+  //       id: `${p1}${p2} `,
+  //       players: [ids[0], ids[1]],
+  //     })
+  //     ids = ids.slice(2)
+  //   }
+  //   // If one player left, make a single-player team
+  //   if (ids.length === 1) {
+  //     newTeams.push({
+  //       id: allPlayers.filter((item) => item.id === ids[0])[0].name,
+  //       players: [ids[0]],
+  //     })
+  //   }
+  //   setTeams([...teams, ...newTeams])
+  //   setSelected([])
+  // }
+  // const activeTeams = useActiveTournamentTeams()
+  // console.log("🚀 ~ TeamBuilder ~ activeTeams:", activeTeams)
 
     const handleNext = async () => {
+        console.log('🚀 ~ TeamBuilder ~ team:', team)
 
-      // 1. Create team IDs + new teams
-      const newTeams = teams.map((team) => ({
-        id: uuidv4(),
-        name: team.id,
-        players_id: team.players,
-        totalPointsScored: 0,
-      }))
-      console.log("🚀 ~ newTeams ~ newTeams:", newTeams)
+    if (!activeTournamentId) return
+    const createdTeams = await Promise.all(
+      team.map(([player1, player2]) => {
+        return createAndRegisterTeam(activeTournamentId, player1, player2)
+      })
+    )
+        console.log('🚀 ~ createdTeams ~ createdTeams:', createdTeams)
+        setActiveTeams(
+          (createdTeams ?? []).filter((team): team is Team => team !== null)
+        )
+        const fixtures = generateFixtures('round-robin', createdTeams)
 
-      // 2. Add all teams in parallel
-      await Promise.all(newTeams.map((team) => addTeam(team)))
-
-      // 3. Optional: Update tournament with team IDs
-      const teamIds = newTeams.map((team) => team.id)
-      assignPlayersToTournament(currentTournamentId ?? "", teamIds)
-
-      // 4. Generate fixtures with actual teams
-      const fixtures = generateFixtures('round-robin', newTeams)
-      
-      // 5. Create match objects from fixtures
-      const newMatches = fixtures.map((f) => ({
-        id: '',
-        tournamentId: currentTournamentId ?? '',
-        team1Id: f.playerA.id,
-        team2Id: f.playerB.id,
-        team1_score:[] ,
-        team2_score: [],
-      }))
-
-      // 6. Add all matches in parallel
-      await Promise.all(newMatches.map((match) => addMatch(match)))
-
-      // 7. Proceed
-      console.log('🚀 ~ handleNext ~ tournaments:', tournaments)
-      onNext()
-    }
+    // 5. Create match objects from fixtures
+    const newMatches = fixtures.map((f, i) => ({
+      tournament_id: activeTournamentId ,
+      team_1_id: f.playerA,
+      team_2_id: f.playerB,
+      tag: `Match ${i + 1}`,
+    }))
+    console.log('🚀 ~ newMatches ~ newMatches:', newMatches)
+    await Promise.all(newMatches.map((match) => addMatch(match)))
+   
+    onNext()
+  }
 
   return (
     <div className="flex flex-col  gap-4 ">
-      <h2 className="text-lg font-semibold text-white mb-2">
-        Create Teams
-          </h2>
-          
-
+      <h2 className="text-lg font-semibold text-white mb-2">Create Teams</h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-2xl">
         {availablePlayers.map((player) => (
@@ -136,7 +115,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
              : 'border-blue-400 hover:border-blue-400  '
          }
        `}
-            disabled={teams.flatMap((t) => t.players).includes(player.id)}
+            disabled={team.flatMap((t) => t).includes(player.id)}
           >
             <span className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-gradient-to-tr from-lime-400 to-blue-500 transition-all duration-300 rounded-2xl z-0" />
             {/* <Image
@@ -156,12 +135,12 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         <Button
           className="flex-1"
           onClick={handleAddTeam}
-          disabled={!(selected.length === 2 || availablePlayers.length === 1)}
+          //   disabled={!(selected.length === 2 || availablePlayers.length === 1)}
         >
           Add Team {!(selected.length === 2 || availablePlayers.length === 1)}
         </Button>
         <Button
-          onClick={handleAutoGenerateTeams}
+          //   onClick={handleAutoGenerateTeams}
           disabled={availablePlayers.length < 1}
           variant={'secondary'}
         >
@@ -172,12 +151,12 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
       <div className="w-full mt-6">
         <h3 className="text-lg font-semibold text-white mb-2">Teams</h3>
         <div className="flex flex-wrap gap-4">
-          {teams.map((team) => (
+          {team.map((team, index) => (
             <div
-              key={team.id}
+              key={index}
               className="flex items-center gap-2 bg-[#232c3b] rounded-xl px-4 py-2"
             >
-              {team.players.map((pid) => {
+              {team.map((pid) => {
                 const p = allPlayers.find((pl) => pl.id === pid)
                 return (
                   <span
@@ -197,7 +176,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
               })}
               <button
                 className="ml-2 text-xs text-red-400 hover:text-red-600"
-                onClick={() => handleRemoveTeam(team.id)}
+                onClick={() => handleRemoveTeam(index)}
                 type="button"
               >
                 Remove
@@ -209,6 +188,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
       <Button type="button" onClick={handleNext}>
         Next
       </Button>
+    
     </div>
   )
 }

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -8,7 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select'
-import { useSmashScoreStore } from '@/store/useSmashScoreStore'
+// import { useSmashScoreStore } from '@/store/useSmashScoreStore'
+import { useBadmintonStore } from '@/store/useBadmintonStore'
 
 export type MatchType = 'singles' | 'doubles'
 
@@ -24,9 +24,8 @@ const MATCH_TYPES = [
 export default function TournamentFormatSelector({
   onNext,
 }: TournamentFormatSelectorProps) {
-  const {addTournament , tournaments , currentTournamentId} = useSmashScoreStore()
-  console.log("🚀 ~ currentTournamentId:", currentTournamentId)
-  console.log("🚀 ~ tournaments:", tournaments)
+  const { addTournament } = useBadmintonStore()
+
   const [inputData, setInputData] = useState<{
     name: string
     match_type: MatchType | null
@@ -34,21 +33,22 @@ export default function TournamentFormatSelector({
     points_per_game: number
   }>({
     name: '',
-    match_type: null,
+    match_type: 'singles',
     max_game_set: 1,
     points_per_game: 21,
   })
 
-    const handleNext = async () => {
-        await addTournament({
-          id: "",
-          teams_Id: [],
-          type: 'round-robin',
-          name: inputData.name,
-          match_type: inputData.match_type ?? 'singles',
-          max_game_set: Number(inputData.max_game_set),
-          points_per_game: Number(inputData.points_per_game),
-        })
+  const handleNext = async () => {
+    // name: string
+    // tournament_type: 'league' | 'knockout' | 'round-robin'
+    // match_type: 'singles' | 'doubles'
+    // winner_team_id?: string
+    // created_at: string
+    await addTournament({
+      name: inputData.name,
+      tournament_type: 'round-robin',
+      match_type: inputData.match_type ?? 'singles',
+    })
     onNext()
   }
 

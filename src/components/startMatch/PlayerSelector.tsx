@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import {  useSmashScoreStore } from '@/store/useSmashScoreStore'
+import { useSmashScoreStore } from '@/store/useSmashScoreStore'
 import { Button } from '../ui/button'
 import { v4 as uuidv4 } from 'uuid'
 import { generateFixtures } from '@/lib/FixtureGenerator'
@@ -12,13 +12,9 @@ interface TeamBuilderProps {
 
 export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
   const [selected, setSelected] = useState<string[]>([])
-  console.log("🚀 ~ TeamBuilder ~ selected:", selected)
-  const {
-    addTeam,
-    addMatch,
-    currentTournamentId,
-    assignPlayersToTournament,
-  } = useSmashScoreStore()
+  console.log('🚀 ~ TeamBuilder ~ selected:', selected)
+  const { addTeam, addMatch, currentTournamentId, assignPlayersToTournament } =
+    useSmashScoreStore()
 
   function handleSelect(player: string) {
     setSelected((prev) =>
@@ -49,25 +45,23 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
     // Generate fixtures
     const fixtures = generateFixtures('round-robin', singleTeams)
 
-    const newMatches = fixtures.map((f) => ({
+    const newMatches = fixtures.map((f , i) => ({
       id: '',
       tournamentId: currentTournamentId ?? '',
       team1Id: f.playerA.id,
       team2Id: f.playerB.id,
       team1_score: [],
       team2_score: [],
+      tag: `Match ${i+1}`,
     }))
 
     await Promise.all(newMatches.map(addMatch))
     onNext()
-
   }
 
   return (
     <div className="flex flex-col  gap-4 ">
-      <h2 className="text-lg font-semibold text-white mb-2">
-        Select Players 
-      </h2>
+      <h2 className="text-lg font-semibold text-white mb-2">Select Players</h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-2xl">
         {allPlayers.map((player) => (
@@ -96,7 +90,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
               {player.name}
             </span>
           </button>
-        ))}           
+        ))}
       </div>
       <Button type="button" onClick={handleNext}>
         Next
