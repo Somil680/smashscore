@@ -59,46 +59,7 @@ export default function ScoreEntryCard({
   onSave,
   max_game_set,
 }: ScoreCardProps) {
-  //   const Team1 = {
-  //     name: `${match.team_1.player_1.name} ${
-  //       match.team_1.player_2 !== null  ?  `& ${match.team_1.player_2.name} ` : ""
-  //     } `,
-  //     image: [
-  //       `${match.team_1.player_1.image_url}`,
-  //       ` ${
-  //         match.team_1.player_2 !== null ?  ` ${match.team_1.player_2.image_url}` : ""
-  //       } `,
-  //     ],
-  //   }
-  //   console.log("🚀 ~ ScoreEntryCard ~ Team1:", Team1)
-  //   const Team2 = {
-  //     name: `${match.team_2.player_1.name} ${
-  //       match.team_2.player_2 !== null ? `& ${match.team_2.player_2.name} ` : ''
-  //     } `,
-  //     image: [
-  //       `${match.team_2.player_1.image_url}`,
-  //       ` ${match.team_2.player_2  !== null ? ` ${match.team_2.player_2.image_url}` : ""} `,
-  //     ],
-  //   }
-  //   console.log("🚀 ~ ScoreEntryCard ~ Team2:", Team2)
-
-  // --- Helper function to get the display name for a team ---
-  //   const getTeamName = (team: Partial<TeamWithPlayers>) => {
-  //     // Defensive Check: If team or player_1 object is missing, fallback gracefully.
-  //     if (!team || !team.player_1) {
-  //       return `Team (${team?.id?.substring(0, 6)}...)` || 'TBA'
-  //     }
-
-  //     // For doubles, show both player names, but check if player_2 exists.
-  //     if (team.player_2) {
-  //       return `${team.player_1.name} & ${team.player_2.name}`
-  //     }
-
-  //     // For singles, show the single player's name.
-  //     return team.player_1.name
-  //   }
-
-
+  
   const team1Details = getTeamDetails(match.team_1)
   const team2Details = getTeamDetails(match.team_2)
 
@@ -243,7 +204,7 @@ export default function ScoreEntryCard({
         className={`mt-4 px-8 py-3 rounded-xl bg-gradient-to-tr from-lime-400 to-blue-500 text-white font-bold shadow-lg hover:scale-105 transition-transform text-lg ${
           completed ? 'opacity-60 cursor-not-allowed' : ''
         }`}
-        disabled={completed}
+        disabled={completed || !(scoresA && scoresB) }
       >
         {completed ? 'Saved! ' : 'Save Result'}
       </motion.button>

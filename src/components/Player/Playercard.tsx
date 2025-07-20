@@ -1,34 +1,30 @@
 'use client'
 
 import React from 'react'
-import { Player } from '@/store/useSmashScoreStore'
 import { Card, CardContent } from '@/components/ui/card'
 import { Trophy, BarChart3, Activity, User2 } from 'lucide-react'
 import Image from 'next/image'
+import { Player } from '@/store/useBadmintonStore'
 
 interface PlayerCardProps {
   player: Player
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
+  console.log("🚀 ~ player:", player)
   return (
     <Card className="w-full max-w-sm rounded-2xl shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
       <CardContent className="p-6 space-y-4">
         {/* Player Image + Name */}
         <div className="flex items-center space-x-4">
-          {player.image ? (
-            <Image
-              src={player.image}
-              alt={player.name}
-              width={60}
-              height={60}
-              className="rounded-full object-cover border-2 border-blue-500"
-            />
-          ) : (
-            <div className="w-[60px] h-[60px] rounded-full bg-gray-300 flex items-center justify-center text-gray-700 font-bold">
-              {player.name.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <Image
+            src={player.image_url || "" }
+            alt={player.name}
+            width={60}
+            height={60}
+            className="rounded-full object-cover border-2 border-blue-500"
+          />
+
           <div>
             <h2 className="text-lg font-bold text-gray-800 dark:text-white">
               {player.name}

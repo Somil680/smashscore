@@ -4,7 +4,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import Image from "next/image";
 
 // Example avatar list (replace with your actual avatar asset paths)
-const AVATARS = Array.from({ length: 16 }, (_, i) => `/avatars/avatar${i + 1}.gif`);
+const AVATARS = Array.from(
+  { length: 9 }, // Assuming you have more images, you can increase this length
+  (_, i) => `/profileImage/i${i + 1}.png`
+)
 
 export interface AddPlayerModalProps {
   open: boolean;
@@ -15,6 +18,7 @@ export interface AddPlayerModalProps {
 export const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ open, onClose, onSubmit }) => {
   const [name, setName] = React.useState("");
   const [image, setImage] = React.useState(AVATARS[0]);
+  console.log("🚀 ~ image:", image)
   const [touched, setTouched] = React.useState(false);
 
   React.useEffect(() => {
@@ -43,7 +47,7 @@ export const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ open, onClose, o
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md w-full rounded-2xl p-0 overflow-hidden animate-in fade-in zoom-in-90">
+      <DialogContent className=" rounded-2xl p-0 overflow-hidden bg-black m-4">
         <DialogHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-2">
           <DialogTitle className="text-xl font-bold">Add Player</DialogTitle>
           {/* <DialogClose asChild>
@@ -93,7 +97,7 @@ export const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ open, onClose, o
                   <button
                     key={img}
                     type="button"
-                    className={`rounded-full border-2 p-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                    className={`rounded-full border-2  transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                       image === img
                         ? "border-lime-400 ring-2 ring-lime-300"
                         : "border-transparent hover:border-blue-400"

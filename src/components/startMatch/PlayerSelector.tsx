@@ -1,20 +1,21 @@
 import React, { useState } from 'react'
-import { useSmashScoreStore } from '@/store/useSmashScoreStore'
 import { Button } from '../ui/button'
-import { v4 as uuidv4 } from 'uuid'
+import { Loader2, Sparkles } from 'lucide-react'
+import { Player, Team, useBadmintonStore } from '@/store/useBadmintonStore'
+import { createAndRegisterTeam } from '@/hooks/createAndRegisterTeam'
 import { generateFixtures } from '@/lib/FixtureGenerator'
-// import { generateFixtures } from '@/lib/FixtureGenerator'
-
+import Image from 'next/image'
 interface TeamBuilderProps {
-  allPlayers: { id: string; name: string; image?: string }[]
-  onNext: () => void
+  allPlayers: Player[]
+    onNext: () => void
 }
 
-export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
+export default function PlayerSelector({ onNext, allPlayers }: TeamBuilderProps) {
+  const { activeTournamentId, setActiveTeams, addMatch , tournaments ,loading } =
+    useBadmintonStore()
+  console.log("🚀 ~ TeamBuilder ~ tournaments:", tournaments)
   const [selected, setSelected] = useState<string[]>([])
-  console.log('🚀 ~ TeamBuilder ~ selected:', selected)
-  const { addTeam, addMatch, currentTournamentId, assignPlayersToTournament } =
-    useSmashScoreStore()
+  const [team, setTeams] = useState<string[][]>([])
 
   function handleSelect(player: string) {
     setSelected((prev) =>
@@ -23,48 +24,88 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         : [...prev, player]
     )
   }
+//   const handleAddTeam = async () => {
+//     setTeams([...team, selected])
+//     setSelected([])
+//   }
 
-  const handleNext = async () => {
-    // Instead of creating manual teams for singles:
-    const selectedPlayers = selected // already filtered
-    const singleTeams = selectedPlayers.map((playerId) => {
-      const player = allPlayers.find((p) => p.id === playerId)!
-      return {
-        id: uuidv4(),
-        name: player.name,
-        players_id: [playerId],
-        totalPointsScored: 0,
-      }
-    })
-    await Promise.all(singleTeams.map(addTeam))
-    assignPlayersToTournament(
-      currentTournamentId ?? '',
-      singleTeams.map((t) => t.id)
+  const handleRemoveTeam = (rowIndex: number) => {
+    setTeams(team.filter((_, index) => index !== rowIndex))
+  }
+
+  // const availablePlayers = allPlayers.filter(
+  //   (p) => !teams.some((t) => t.players.includes(p.id))
+  //   )
+  const availablePlayers = allPlayers.filter(
+    (num) => !team.flat().includes(num.id)
+  )
+
+  // const handleAutoGenerateTeams = () => {
+  //   // Auto-generate teams from availablePlayers
+  //   const newTeams = []
+  //   let ids = availablePlayers.map((p) => p.id)
+  //   ids = ids.sort(() => Math.random() - 0.5)
+  //   while (ids.length >= 2) {
+  //     const p1 = allPlayers.filter((item) => item.id === ids[0])[0].name
+  //     const p2 =
+  //       selected.length === 1
+  //         ? ''
+  //         : '&' + allPlayers.filter((item) => item.id === ids[1])[0].name
+  //     newTeams.push({
+  //       id: `${p1}${p2} `,
+  //       players: [ids[0], ids[1]],
+  //     })
+  //     ids = ids.slice(2)
+  //   }
+  //   // If one player left, make a single-player team
+  //   if (ids.length === 1) {
+  //     newTeams.push({
+  //       id: allPlayers.filter((item) => item.id === ids[0])[0].name,
+  //       players: [ids[0]],
+  //     })
+  //   }
+  //   setTeams([...teams, ...newTeams])
+  //   setSelected([])
+  // }
+  // const activeTeams = useActiveTournamentTeams()
+  // console.log("🚀 ~ TeamBuilder ~ activeTeams:", activeTeams)
+
+    const handleNext = async () => {
+        console.log('🚀 ~ TeamBuilder ~ team:', team)
+
+    if (!activeTournamentId) return
+    const createdTeams = await Promise.all(
+      selected.map(([player1, player2]) => {
+        return createAndRegisterTeam(activeTournamentId, player1, player2)
+      })
     )
+        console.log('🚀 ~ createdTeams ~ createdTeams:', createdTeams)
+        setActiveTeams(
+          (createdTeams ?? []).filter((team): team is Team => team !== null)
+        )
+        const fixtures = generateFixtures('round-robin', createdTeams)
 
-    // Generate fixtures
-    const fixtures = generateFixtures('round-robin', singleTeams)
-
-    const newMatches = fixtures.map((f , i) => ({
-      id: '',
-      tournamentId: currentTournamentId ?? '',
-      team1Id: f.playerA.id,
-      team2Id: f.playerB.id,
-      team1_score: [],
-      team2_score: [],
-      tag: `Match ${i+1}`,
+    // 5. Create match objects from fixtures
+    const newMatches = fixtures.map((f, i) => ({
+      tournament_id: activeTournamentId ,
+      team_1_id: f.playerA,
+      team_2_id: f.playerB,
+      tag: `Match ${i + 1}`,
     }))
-
-    await Promise.all(newMatches.map(addMatch))
+    console.log('🚀 ~ newMatches ~ newMatches:', newMatches)
+    await Promise.all(newMatches.map((match) => addMatch(match)))
+   
     onNext()
   }
 
   return (
     <div className="flex flex-col  gap-4 ">
-      <h2 className="text-lg font-semibold text-white mb-2">Select Players</h2>
+      <h2 className="text-lg font-semibold text-white mb-2">
+        Select Single Player
+      </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-2xl">
-        {allPlayers.map((player) => (
+        {availablePlayers.map((player) => (
           <button
             key={player.id}
             type="button"
@@ -76,24 +117,85 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
              : 'border-blue-400 hover:border-blue-400  '
          }
        `}
-            // disabled={teams.flatMap((t) => t.players).includes(player.id)}
+            disabled={team.flatMap((t) => t).includes(player.id)}
           >
             <span className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-gradient-to-tr from-lime-400 to-blue-500 transition-all duration-300 rounded-2xl z-0" />
-            {/* <Image
-         src={p.image || "/avatars/avatar1.gif"}
-         alt={p.name}
-         width={56}
-         height={56}
-         className="rounded-full w-14 h-14 object-cover border-2 border-blue-200 group-hover:border-lime-400 transition-all duration-300 z-10"
-       /> */}
+            <Image
+              src={player.image_url || '/avatars/avatar1.gif'}
+              alt={player.name}
+              width={56}
+              height={56}
+              className="rounded-full w-14 h-14 object-cover border-2 border-blue-200 group-hover:border-lime-400 transition-all duration-300 z-10"
+            />
             <span className="font-medium text-base text-white mt-1 z-10 group-hover:text-lime-300 transition-colors duration-300">
               {player.name}
             </span>
           </button>
         ))}
       </div>
-      <Button type="button" onClick={handleNext}>
-        Next
+      <div className="flex justify-between gap-2">
+        {/* <Button
+          className="flex-1"
+          onClick={handleAddTeam}
+          disabled={availablePlayers.length === 0}
+        >
+          Add Team {!(selected.length === 2 || availablePlayers.length === 1)}
+        </Button> */}
+        {/* {tournaments[0].match_type === 'doubles' && (
+          <Button
+            //   onClick={handleAutoGenerateTeams}
+            disabled={availablePlayers.length < 1}
+            variant={'secondary'}
+          >
+            <Sparkles size={20} />
+            Auto
+          </Button>
+        )} */}
+      </div>
+      <div className="w-full mt-6">
+        <h3 className="text-lg font-semibold text-white mb-2">Teams</h3>
+        <div className="flex flex-wrap gap-4">
+          {selected.map((team, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-2 bg-[#232c3b] rounded-xl px-4 py-2"
+            >
+              {selected.map((pid) => {
+                const p = allPlayers.find((pl) => pl.id === pid)
+                return (
+                  <span
+                    key={pid}
+                    className="flex items-center gap-1 text-white font-medium"
+                  >
+                    <Image
+                      src={p?.image_url ?? ''}
+                      alt={p?.name || 'Player'}
+                      width={24}
+                      height={24}
+                      className="rounded-full"
+                    />
+                    {p?.name}
+                  </span>
+                )
+              })}
+              <button
+                className="ml-2 text-xs text-red-400 hover:text-red-600"
+                onClick={() => handleRemoveTeam(index)}
+                type="button"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        onClick={handleNext}
+        disabled={selected.length === 0 || loading}
+      >
+        {loading ? <Loader2 size={25} className=" animate-spin" /> : 'Next'}
       </Button>
     </div>
   )

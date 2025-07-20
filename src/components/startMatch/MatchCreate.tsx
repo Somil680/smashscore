@@ -2,10 +2,10 @@
 import React, { useEffect, useMemo } from 'react'
 import ScoreEntryCard from './ScoreEntryCard'
 import { useBadmintonStore } from '@/store/useBadmintonStore'
-import { Trophy, Calendar, Users, ListChecks, Play } from 'lucide-react'
+import { Trophy, Calendar, Users, ListChecks } from 'lucide-react'
 import FinalWinnerChecker from './FinalWinnerChecker'
 import { getTeamDetails } from '@/hooks/helperFunction'
-// import { generatePlayoffFixtures } from '@/hooks/generatePlayOff'
+import { useRouter } from 'next/navigation'
 export interface Team {
   id: string
   // ... other team properties
@@ -31,7 +31,7 @@ export interface MatchScore {
 export interface PlayoffFixture {
   teamA: Team
   teamB: Team | null // teamB can be null for a final (e.g., "Winner of Semi")
-  tag: 'Semi-Final' | 'Final'
+  tag: 'Semi-Final' | 'Final Match'
 }
 
 const MatchCreate = () => {
@@ -46,18 +46,17 @@ const MatchCreate = () => {
     updateMatch,
     matchScores,
     fetchTournamentsParticipants,
-    teams,
     setTournamentWinner,
   } = useBadmintonStore()
     console.log("🚀 ~ MatchCreate ~ matches:", matches)
-
+   const router = useRouter()
   useEffect(() => {
     if (!activeTournamentId || activeTeams.length === 0) return
     fetchMatchesForTournament(activeTournamentId)
     fetchTournamentsParticipants(activeTournamentId)
   }, [activeTournamentId, fetchMatchesForTournament])
 
-  const { groupStageCompleted, playoffsExist, finalMatch } = useMemo(() => {
+  const { finalMatch } = useMemo(() => {
     if (matches.length === 0)
       return {
         groupStageCompleted: false,
@@ -127,107 +126,15 @@ const MatchCreate = () => {
     })
   }, [matches, matchScores, activeTeams])
 
-  // const handleSaveResult = (
-  //   match: Match,
-  //   scoresMatch: {
-  //     game_number: number
-  //     team_1_score: number
-  //     team_2_score: number
-  //   }[],
-  //   winnerTeamId: string
-  // ) => {
-  //   finishMatch(match.id, winnerTeamId, scoresMatch)
-  // }
-
-  //   function generatePlayoffFixtures(
-  //   teams: Team[],
-  //   matches: Match[],
-  //   scores: MatchScore[]
-  // ): PlayoffFixture[] {
-  //   // 1. Initialize stats for each team
-  //   const teamStats: { [key: string]: { wins: number; pointDifference: number; team: Team } } = {}
-
-  //   for (const team of teams) {
-  //     teamStats[team.id] = { wins: 0, pointDifference: 0, team }
-  //   }
-
-  //   // 2. Calculate wins and point differences from all matches
-  //   for (const match of matches) {
-  //     if (!match.winner_team_id) continue // Skip matches that weren't completed
-
-  //     // --- Calculate Wins ---
-  //     teamStats[match.winner_team_id].wins += 1
-
-  //     // --- Calculate Point Difference ---
-  //     const matchScores = scores.filter((s) => s.match_id === match.id)
-  //     let totalPoints1 = 0
-  //     let totalPoints2 = 0
-
-  //     for (const gameScore of matchScores) {
-  //       totalPoints1 += gameScore.team_1_score
-  //       totalPoints2 += gameScore.team_2_score
-  //     }
-
-  //     const pointDiff = totalPoints1 - totalPoints2
-
-  //     // Add point difference to each team's total
-  //     teamStats[match.team_1_id].pointDifference += pointDiff
-  //     teamStats[match.team_2_id].pointDifference -= pointDiff
-  //   }
-
-  //   // 3. Rank the teams
-  //   const rankedTeams = Object.values(teamStats).sort((a, b) => {
-  //     // Sort by wins first (descending)
-  //     if (b.wins !== a.wins) {
-  //       return b.wins - a.wins
-  //     }
-  //     // If wins are tied, sort by point difference (descending)
-  //     return b.pointDifference - a.pointDifference
-  //   })
-
-  //   console.log('🚀 ~ rankedTeams ~ teamStats:', teamStats)
-  //   console.log('Ranked Teams:', rankedTeams)
-
-  //   // 4. Check if there are enough ranked teams to generate playoffs
-  //   if (rankedTeams.length < 3) {
-  //     console.warn('Not enough teams to generate semi-finals and finals.')
-  //     return []
-  //   }
-
-  //   // 5. Generate the new playoff fixtures
-  //   const playoffFixtures: PlayoffFixture[] = []
-
-  //   const rank1 = rankedTeams[0].team
-  //   const rank2 = rankedTeams[1].team
-  //   const rank3 = rankedTeams[2].team
-
-  //   // Semi-Final: Rank 2 vs Rank 3
-  //   playoffFixtures.push({
-  //     teamA: rank2,
-  //     teamB: rank3,
-  //     tag: 'Semi-Final',
-  //   })
-
-  //   // Final: Rank 1 vs Winner of Semi-Final (TBA)
-  //   playoffFixtures.push({
-  //     teamA: rank1,
-  //     teamB: null, // Winner is to be announced
-  //     tag: 'Final',
-  //   })
-
-  //   return playoffFixtures
-  // }
-
-  // Check if all initial matches are completed
-
   const allMatchesCompleted = useMemo(() => {
     if (matches.length === 0) return false
     // We only check for matches without a playoff tag
     const groupStageMatches = matches.filter(
-      (m) => m.tag !== 'Semi-Final' && m.tag !== 'Final'
+      (m) => m.tag !== 'Semi-Final' && m.tag !== 'Final Match'
     )
     return groupStageMatches.every((match) => !!match.winner_team_id)
   }, [matches])
+  console.log("🚀 ~ allMatchesCompleted ~ allMatchesCompleted:", allMatchesCompleted)
 
   const handleSaveResult = (
     match: Match,
@@ -262,50 +169,11 @@ const MatchCreate = () => {
   const handleDeclareWinner = () => {
     if (finalMatch && finalMatch.winner_team_id && activeTournamentId) {
       setTournamentWinner(activeTournamentId, finalMatch.winner_team_id)
+     router.replace(`tournaments/${activeTournamentId}`)
     } else {
       alert('Final match is not yet complete.')
     }
   }
-  // useEffect(() => {
-  //   if (!allMatchesCompleted) return
-  //   teamStats.sort((a, b) => {
-  //     if (b.wins !== a.wins) {
-  //       return b.wins - a.wins
-  //     }
-  //     return b.pointDifference - a.pointDifference
-  //   })
-  //   const tieMatches = generateTieBreakerFixtures(
-  //     teamStats,
-  //     activeTeams,
-  //     activeTournamentId
-  //   )
-  //   console.log('🚀 ~ useEffect ~ tieMatches:', tieMatches)
-  // }, [allMatchesCompleted])
-  console.log('🚀 ~ teamStats.sort ~ teamStats:', teamStats)
-
-  // const handleGeneratePlayoffs = async () => {
-  //   if (!activeTournamentId) return
-
-  //   // Generate the new fixtures
-  //   const newFixtures = generatePlayoffFixtures(
-  //     activeTeams,
-  //     matches,
-  //     matchScores
-  //   )
-
-  //   // Save the new matches to the database
-  //   for (const fixture of newFixtures) {
-  //     await addMatch({
-  //       tournament_id: activeTournamentId,
-  //       team_1_id: fixture.teamA.id,
-  //       // For the final, teamB is initially null
-  //       team_2_id: fixture.teamB ? fixture.teamB.id : null,
-  //       tag: fixture.tag,
-  //     })
-  //   }
-  //   // Refresh the match list to show the new playoff matches
-  //   fetchMatchesForTournament(activeTournamentId)
-  // }
 
   return (
     <div className="space-y-4 ">
@@ -369,7 +237,8 @@ const MatchCreate = () => {
             </button>
           </div>
         )}
-      <FinalWinnerChecker teamStats={teamStats} />
+  
+       <FinalWinnerChecker teamStats={teamStats} />
       <div className="flex  flex-wrap gap-4">
         {teamStats
           .sort((a, b) => b.pointDifference - a.pointDifference)
@@ -405,88 +274,3 @@ const MatchCreate = () => {
 }
 
 export default MatchCreate
-{
-  /* <FinalWinnerChecker /> */
-}
-{
-  /* <Button onClick={() => addDataToDatabase(tournaments , matches , teams)} >
-  Complete Tournament
-</Button> */
-}
-{
-  /* <div className="flex  flex-wrap gap-4">
-  {teams
-    .sort((a, b) => b.totalPointsScored - a.totalPointsScored)
-    .map((team) => (
-      <div
-        key={team.id}
-        className="bg-transparent text-white p-[1px] rounded-xl w-full max-w-[190px]"
-      >
-        <div className="bg-[#111827] rounded-xl px-3 py-2 flex flex-col border border-transparent bg-clip-padding">
-          <h3 className="text-sm font-semibold text-white">
-            {team.name}
-          </h3>
-          <div className="flex justify-between mt-1">
-            <span className="text-xs text-lime-400 font-medium">
-              Points: {team.totalPointsScored}
-            </span>
-            <span className="text-xs text-blue-500 font-medium">
-              Wins: {2}
-            </span>
-          </div>
-        </div>
-        <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-lime-400 via-blue-500 to-purple-400 z-[-1]" />
-      </div>
-    ))}
-</div> */
-}
-// const activeTournament = useBadmintonStore((state) =>
-//   state.tournaments.find((t) => t.id === state.activeTournamentId)
-// )
-// console.log("🚀 ~ MatchCreate ~ activeTournament:", activeTournament)
-
-// const [fixtures, setFixtures] = useState<Fixture[]>([])
-// console.log("🚀 ~ MatchCreate ~ fixtures:", fixtures)
-
-// This function generates the fixtures but doesn't save them yet
-// const handleGenerateFixtures = () => {
-//   if (!activeTournament || activeTeams.length < 2) {
-//     alert(
-//       'Cannot generate fixtures. Make sure a tournament is active and has at least 2 teams.'
-//     )
-//     return
-//   }
-//   const generated = generateFixtures(
-//     activeTournament.tournament_type,
-//     activeTeams
-//   )
-//   setFixtures(generated)
-// }
-
-// This function takes the generated fixtures and saves them to the database
-// const handleConfirmAndCreateMatches = async () => {
-//   if (!activeTournamentId || fixtures.length === 0) {
-//     alert('No fixtures to save. Please generate fixtures first.')
-//     return
-//   }
-
-//   try {
-//     await Promise.all(
-//       fixtures.map((fixture) =>
-//         addMatch({
-//           tournament_id: activeTournamentId,
-//           team_1_id: fixture.playerA,
-//           team_2_id: fixture.playerB,
-//           tag: 'Round 1', // Or determine tag based on tournament type/round
-//         })
-//       )
-//     )
-//     alert(`${fixtures.length} matches have been created successfully!`)
-//     setFixtures([]) // Clear fixtures after saving
-//   } catch (error) {
-//     alert(
-//       'An error occurred while creating the matches. Please check the console.'
-//     )
-//     console.error('Failed to create matches:', error)
-//   }
-// }

@@ -1,23 +1,22 @@
 import React, { useState } from 'react'
 import { Button } from '../ui/button'
-import { Sparkles } from 'lucide-react'
-import { Team, useBadmintonStore } from '@/store/useBadmintonStore'
+import { Loader2, Sparkles } from 'lucide-react'
+import { Player, Team, useBadmintonStore } from '@/store/useBadmintonStore'
 import { createAndRegisterTeam } from '@/hooks/createAndRegisterTeam'
 import { generateFixtures } from '@/lib/FixtureGenerator'
-
+import Image from 'next/image'
 interface TeamBuilderProps {
-  allPlayers: { id: string; name: string; image?: string }[]
-    onNext: () => void
-   activePlayers : Team[]
+  allPlayers: Player[]
+  onNext: () => void
 }
 
 export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
-  const { activeTournamentId, setActiveTeams, addMatch } =
+  const { activeTournamentId, setActiveTeams, addMatch, tournaments, loading } =
     useBadmintonStore()
   const [selected, setSelected] = useState<string[]>([])
   const [team, setTeams] = useState<string[][]>([])
 
-  function handleSelect(player: string) {
+  const handleSelect = (player: string) => {
     setSelected((prev) =>
       prev.includes(player)
         ? prev.filter((pid) => pid !== player)
@@ -28,79 +27,69 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
     setTeams([...team, selected])
     setSelected([])
   }
-
   const handleRemoveTeam = (rowIndex: number) => {
     setTeams(team.filter((_, index) => index !== rowIndex))
   }
-
-  // const availablePlayers = allPlayers.filter(
-  //   (p) => !teams.some((t) => t.players.includes(p.id))
-  //   )
   const availablePlayers = allPlayers.filter(
     (num) => !team.flat().includes(num.id)
   )
+  const handleCheckMatchTypeSingle =
+    tournaments[0].match_type === 'singles' ? true : false
 
-  // const handleAutoGenerateTeams = () => {
-  //   // Auto-generate teams from availablePlayers
-  //   const newTeams = []
-  //   let ids = availablePlayers.map((p) => p.id)
-  //   ids = ids.sort(() => Math.random() - 0.5)
-  //   while (ids.length >= 2) {
-  //     const p1 = allPlayers.filter((item) => item.id === ids[0])[0].name
-  //     const p2 =
-  //       selected.length === 1
-  //         ? ''
-  //         : '&' + allPlayers.filter((item) => item.id === ids[1])[0].name
-  //     newTeams.push({
-  //       id: `${p1}${p2} `,
-  //       players: [ids[0], ids[1]],
-  //     })
-  //     ids = ids.slice(2)
-  //   }
-  //   // If one player left, make a single-player team
-  //   if (ids.length === 1) {
-  //     newTeams.push({
-  //       id: allPlayers.filter((item) => item.id === ids[0])[0].name,
-  //       players: [ids[0]],
-  //     })
-  //   }
-  //   setTeams([...teams, ...newTeams])
-  //   setSelected([])
-  // }
-  // const activeTeams = useActiveTournamentTeams()
-  // console.log("🚀 ~ TeamBuilder ~ activeTeams:", activeTeams)
+    const handleAutoGenerateTeams = () => {
+      const newTeams: string[][] = []
 
-    const handleNext = async () => {
-        console.log('🚀 ~ TeamBuilder ~ team:', team)
+      // Get shuffled player IDs
+      let ids = [...availablePlayers.map((p) => p.id)]
+      ids = ids.sort(() => Math.random() - 0.5)
 
+      // Form teams of 2
+      while (ids.length >= 2) {
+        const p1 = ids[0]
+        const p2 = ids[1]
+        newTeams.push([p1, p2])
+        ids = ids.slice(2)
+      }
+
+      // If one player is left, make a single-player team
+      if (ids.length === 1) {
+        newTeams.push([ids[0]])
+      }
+
+      // Add to existing teams
+      setTeams((prev) => [...prev, ...newTeams])
+
+      // Clear selected
+      setSelected([])
+    }
+
+  const handleNext = async () => {
     if (!activeTournamentId) return
     const createdTeams = await Promise.all(
       team.map(([player1, player2]) => {
         return createAndRegisterTeam(activeTournamentId, player1, player2)
       })
     )
-        console.log('🚀 ~ createdTeams ~ createdTeams:', createdTeams)
-        setActiveTeams(
-          (createdTeams ?? []).filter((team): team is Team => team !== null)
-        )
-        const fixtures = generateFixtures('round-robin', createdTeams)
-
+    setActiveTeams(
+      (createdTeams ?? []).filter((team): team is Team => team !== null)
+    )
+    const fixtures = generateFixtures('round-robin', createdTeams)
     // 5. Create match objects from fixtures
     const newMatches = fixtures.map((f, i) => ({
-      tournament_id: activeTournamentId ,
+      tournament_id: activeTournamentId,
       team_1_id: f.playerA,
       team_2_id: f.playerB,
       tag: `Match ${i + 1}`,
     }))
-    console.log('🚀 ~ newMatches ~ newMatches:', newMatches)
     await Promise.all(newMatches.map((match) => addMatch(match)))
-   
     onNext()
   }
 
   return (
     <div className="flex flex-col  gap-4 ">
-      <h2 className="text-lg font-semibold text-white mb-2">Create Teams</h2>
+      <h2 className="text-lg font-semibold text-white mb-2">
+        {handleCheckMatchTypeSingle ? 'Select Single Player' : 'Create Teams'}
+      </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-2xl">
         {availablePlayers.map((player) => (
@@ -118,13 +107,13 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
             disabled={team.flatMap((t) => t).includes(player.id)}
           >
             <span className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-gradient-to-tr from-lime-400 to-blue-500 transition-all duration-300 rounded-2xl z-0" />
-            {/* <Image
-         src={p.image || "/avatars/avatar1.gif"}
-         alt={p.name}
-         width={56}
-         height={56}
-         className="rounded-full w-14 h-14 object-cover border-2 border-blue-200 group-hover:border-lime-400 transition-all duration-300 z-10"
-       /> */}
+            <Image
+              src={player.image_url || '/avatars/avatar1.gif'}
+              alt={player.name}
+              width={56}
+              height={56}
+              className="rounded-full w-14 h-14 object-cover border-2 border-blue-200 group-hover:border-lime-400 transition-all duration-300 z-10"
+            />
             <span className="font-medium text-base text-white mt-1 z-10 group-hover:text-lime-300 transition-colors duration-300">
               {player.name}
             </span>
@@ -135,18 +124,26 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         <Button
           className="flex-1"
           onClick={handleAddTeam}
-          //   disabled={!(selected.length === 2 || availablePlayers.length === 1)}
+          disabled={
+            (handleCheckMatchTypeSingle
+              ? selected.length !== 1 // For single, only 1 player allowed
+              : selected.length < 1 || selected.length > 2) || // For duo, allow 1 or 2
+            selected.length === 0 ||
+            availablePlayers.length === 0
+          }
         >
-          Add Team {!(selected.length === 2 || availablePlayers.length === 1)}
+          Add Team
         </Button>
-        <Button
-          //   onClick={handleAutoGenerateTeams}
-          disabled={availablePlayers.length < 1}
-          variant={'secondary'}
-        >
-          <Sparkles size={20} />
-          Auto
-        </Button>
+        {tournaments[0].match_type === 'doubles' && (
+          <Button
+              onClick={handleAutoGenerateTeams}
+            disabled={availablePlayers.length < 1}
+            variant={'secondary'}
+          >
+            <Sparkles size={20} />
+            Auto
+          </Button>
+        )}
       </div>
       <div className="w-full mt-6">
         <h3 className="text-lg font-semibold text-white mb-2">Teams</h3>
@@ -163,13 +160,13 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
                     key={pid}
                     className="flex items-center gap-1 text-white font-medium"
                   >
-                    {/* <Image
-                      src={p?.image || '/avatars/avatar1.gif'}
+                    <Image
+                      src={p?.image_url ?? ''}
                       alt={p?.name || 'Player'}
                       width={24}
                       height={24}
                       className="rounded-full"
-                    /> */}
+                    />
                     {p?.name}
                   </span>
                 )
@@ -185,10 +182,14 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
           ))}
         </div>
       </div>
-      <Button type="button" onClick={handleNext}>
-        Next
+
+      <Button
+        type="button"
+        onClick={handleNext}
+        disabled={team.length === 0 || loading}
+      >
+        {loading ? <Loader2 size={25} className=" animate-spin" /> : 'Next'}
       </Button>
-    
     </div>
   )
 }

@@ -1,321 +1,15 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { TournamentWithWinner } from '@/lib/type'
+import { MatchWithDetails } from '@/components/startMatch/ScoreEntryCard'
 
 // This is a placeholder for your actual Supabase client.
 // You would typically initialize this in a separate file (e.g., 'lib/supabase.ts')
 // and import it here.
 
 // ============================================================================
-// 1. TYPE DEFINITIONS (Based on the SECOND, improved schema)
+// 1. TYPE DEFINITIONS 
 // ============================================================================
-
-// export interface Player {
-//   id: string
-//   created_at: string
-//   name: string
-//   image_url?: string
-// }
-
-// // Represents a team. For singles, player_2_id will be null.
-// export interface Team {
-//   id: string
-//   player_1_id: string
-//   player_2_id?: string
-//   created_at: string
-// }
-
-// export interface Tournament {
-//   id: string
-//   name: string
-//   tournament_type: 'league' | 'knockout' | 'round-robin'
-//   match_type: 'singles' | 'doubles'
-//   winner_team_id?: string
-//   created_at: string
-// }
-
-// // Junction table type
-// export interface TournamentParticipant {
-//   tournament_id: string
-//   team_id: string
-// }
-
-// export interface Match {
-//   id: string
-//   tournament_id: string
-//   team_1_id: string
-//   team_2_id: string
-//   winner_team_id?: string
-//   tag?: string // 'Semi-Final', 'Round 1', etc.
-//   match_date: string
-//   created_at: string
-// }
-
-// export interface MatchScore {
-//   id: string
-//   match_id: string
-//   game_number: number
-//   team_1_score: number
-//   team_2_score: number
-// }
-
-// // ============================================================================
-// // 2. STORE STATE AND ACTIONS
-// // ============================================================================
-
-// export interface BadmintonState {
-//   // --- STATE ---
-//   players: Player[]
-//   teams: Team[]
-//   tournaments: Tournament[]
-//   // State for the CURRENTLY active tournament
-//   activeTournamentId: string | null
-//   matches: Match[] // Only holds matches for the active tournament
-//   matchScores: MatchScore[] // Only holds scores for the active tournament's matches
-//   loading: boolean
-//   error: string | null
-
-//   // --- ACTIONS ---
-
-//   // High-level data loading
-//   loadInitialData: () => Promise<void> // Fetches players, teams, tournaments
-//   loadTournamentData: (tournamentId: string) => Promise<void> // Fetches data for ONE tournament
-
-//   // Player Actions
-//   fetchPlayers: () => Promise<void>
-//   addPlayer: (name: string, imageUrl?: string) => Promise<Player | null>
-
-//   // Team Actions
-//   addTeam: (player1Id: string, player2Id?: string) => Promise<Team | null>
-
-//   // Tournament Actions
-//   addTournament: (
-//     details: Omit<Tournament, 'id' | 'created_at' | 'winner_team_id'>
-//   ) => Promise<Tournament | null>
-//   addTeamToTournament: (tournamentId: string, teamId: string) => Promise<void>
-//   // Match Actions
-//   addMatch: (
-//     matchData: Omit<
-//       Match,
-//       'id' | 'created_at' | 'match_date' | 'winner_team_id'
-//     >
-//   ) => Promise<Match | null>
-//   finishMatch: (
-//     matchId: string,
-//     winnerTeamId: string,
-//     scores: Omit<MatchScore, 'id' | 'match_id'>[]
-//   ) => Promise<void>
-// }
-
-// // ============================================================================
-// // 3. ZUSTAND STORE IMPLEMENTATION
-// // ============================================================================
-
-// export const useBadmintonStore = create<BadmintonState>((set) => ({
-//   // --- INITIAL STATE ---
-//   players: [],
-//   teams: [],
-//   tournaments: [],
-//   activeTournamentId: null,
-//   matches: [],
-//   matchScores: [],
-//   loading: false,
-//   error: null,
-
-//   // --- HIGH-LEVEL ACTIONS ---
-//   loadInitialData: async () => {
-//     set({ loading: true, error: null })
-//     try {
-//       const [playersRes, teamsRes, tournamentsRes] = await Promise.all([
-//         supabase.from('players').select('*'),
-//         supabase.from('teams').select('*'),
-//         supabase.from('tournaments').select('*'),
-//       ])
-//       if (playersRes.error) throw playersRes.error
-//       if (teamsRes.error) throw teamsRes.error
-//       if (tournamentsRes.error) throw tournamentsRes.error
-
-//       set({
-//         players: playersRes.data || [],
-//         teams: teamsRes.data || [],
-//         tournaments: tournamentsRes.data || [],
-//       })
-//     } catch (error: any) {
-//       set({ error: error.message })
-//     } finally {
-//       set({ loading: false })
-//     }
-//   },
-
-//   loadTournamentData: async (tournamentId) => {
-//     set({
-//       loading: true,
-//       error: null,
-//       activeTournamentId: tournamentId,
-//       matches: [],
-//       matchScores: [],
-//     })
-//     try {
-//       // Step 1: Fetch all matches for the given tournament
-//       const { data: matches, error: matchesError } = await supabase
-//         .from('matches')
-//         .select('*')
-//         .eq('tournament_id', tournamentId)
-//       if (matchesError) throw matchesError
-
-//       set({ matches: matches || [] })
-
-//       if (!matches || matches.length === 0) {
-//         return // No matches, so no scores to fetch
-//       }
-
-//       // Step 2: Extract match IDs
-//       const matchIds = matches.map((m) => m.id)
-
-//       // Step 3: Fetch all scores for those matches in a single query
-//       const { data: scores, error: scoresError } = await supabase
-//         .from('match_scores')
-//         .select('*')
-//         .in('match_id', matchIds)
-//       if (scoresError) throw scoresError
-
-//       set({ matchScores: scores || [] })
-//     } catch (error: any) {
-//       set({ error: error.message })
-//     } finally {
-//       set({ loading: false })
-//     }
-//   },
-
-//   // --- PLAYER ACTIONS ---
-//   fetchPlayers: async () => {
-//     set({ loading: true, error: null })
-//     try {
-//       const { data, error } = await supabase.from('players').select('*')
-//       if (error) throw error
-//       set({ players: data || [] })
-//     } catch (error: any) {
-//       set({ error: error.message })
-//     } finally {
-//       set({ loading: false })
-//     }
-//   },
-//   addPlayer: async (name, image_url) => {
-//     // This logic remains the same, just updates the global player list
-//     const { data, error } = await supabase
-//       .from('players')
-//       .insert([{ name, image_url }])
-//       .select()
-//       .single()
-//     if (error) {
-//       set({ error: error.message })
-//       return null
-//     }
-//     if (data) set((state) => ({ players: [...state.players, data] }))
-//     return data
-//   },
-
-//   // --- TEAM ACTIONS ---
-//   addTeam: async (player_1_id, player_2_id) => {
-//     // This logic remains the same, just updates the global team list
-//     const { data, error } = await supabase
-//       .from('teams')
-//       .insert([{ player_1_id, player_2_id }])
-//       .select()
-//       .single()
-//     if (error) {
-//       set({ error: error.message })
-//       return null
-//     }
-//     if (data) set((state) => ({ teams: [...state.teams, data] }))
-//     return data
-//   },
-
-//   // --- TOURNAMENT ACTIONS ---
-//   addTournament: async (details) => {
-//     // This logic remains the same
-//     const { data, error } = await supabase
-//       .from('tournaments')
-//       .insert([details])
-//       .select()
-//       .single()
-//     if (error) {
-//       set({ error: error.message })
-//       return null
-//     }
-//     if (data)
-//       set((state) => ({
-//         tournaments: [...state.tournaments, data],
-//         activeTournamentId: data[0].id,
-//       }))
-//     // setActiveTournamentId :()=>{},
-
-//     return data
-//   },
-
-//   addTeamToTournament: async (tournament_id, team_id) => {
-//     // This logic remains the same
-//     const { error } = await supabase
-//       .from('tournament_participants')
-//       .insert([{ tournament_id, team_id }])
-//     if (error) set({ error: error.message })
-//   },
-//   //     setActiveTournamentId: () => {
-
-//   //   },
-
-//   // --- MATCH ACTIONS ---
-//   addMatch: async (matchData) => {
-//     // This action now adds a match to the currently active tournament
-//     const { data, error } = await supabase
-//       .from('matches')
-//       .insert([matchData])
-//       .select()
-//       .single()
-//     if (error) {
-//       set({ error: error.message })
-//       return null
-//     }
-//     if (data) {
-//       set((state) => ({ matches: [...state.matches, data] }))
-//     }
-//     return data
-//   },
-
-//   finishMatch: async (matchId, winnerTeamId, scores) => {
-//     set({ loading: true, error: null })
-//     try {
-//       // Step 1: Update the match winner
-//       const { error: matchError } = await supabase
-//         .from('matches')
-//         .update({ winner_team_id: winnerTeamId })
-//         .eq('id', matchId)
-//       if (matchError) throw matchError
-
-//       // Step 2: Add the scores for each game
-//       const scoresToInsert = scores.map((score) => ({
-//         ...score,
-//         match_id: matchId,
-//       }))
-//       const { data: insertedScores, error: scoresError } = await supabase
-//         .from('match_scores')
-//         .insert(scoresToInsert)
-//         .select()
-//       if (scoresError) throw scoresError
-
-//       // Step 3: Update local state correctly
-//       set((state) => ({
-//         matches: state.matches.map((m) =>
-//           m.id === matchId ? { ...m, winner_team_id: winnerTeamId } : m
-//         ),
-//         matchScores: [...state.matchScores, ...(insertedScores || [])],
-//       }))
-//     } catch (error: any) {
-//       set({ error: `Failed to finish match: ${error.message}` })
-//     } finally {
-//       set({ loading: false })
-//     }
-//   },
-// }))
 
 export interface Player {
   id: string
@@ -338,6 +32,8 @@ export interface Tournament {
   tournament_type: 'league' | 'knockout' | 'round-robin'
   match_type: 'singles' | 'doubles'
   winner_team_id?: string
+  points_per_game: number
+  max_game_set : number
   created_at: string
 }
 
@@ -365,6 +61,14 @@ export interface MatchScore {
   team_1_score: number
   team_2_score: number
 }
+export interface MatchWithScoresAndDetails extends MatchWithDetails {
+  match_scores: MatchScore[]
+}
+
+// Represents a full tournament with its winner and all matches/scores
+export interface TournamentWithDetails extends TournamentWithWinner {
+  matches: MatchWithScoresAndDetails[]
+}
 
 // ============================================================================
 // 2. STORE STATE AND ACTIONS
@@ -374,7 +78,7 @@ export interface BadmintonState {
   // --- STATE ---
   players: Player[]
   teams: Team[]
-  tournaments: Tournament[]
+  tournaments: TournamentWithWinner[]
   activeTournamentParticipants: TournamentParticipant[]
   activeTeams: Team[]
   activeTournamentId: string | null
@@ -382,6 +86,9 @@ export interface BadmintonState {
   matchScores: MatchScore[]
   loading: boolean
   error: string | null
+  currentPage: number
+  totalTournaments: number
+  activeTournament: TournamentWithDetails | null // NEW: To hold details of a single tournament
 
   // --- ACTIONS ---
 
@@ -398,7 +105,7 @@ export interface BadmintonState {
   ) => Promise<Team | null>
 
   // Tournament Actions
-  fetchTournaments: () => Promise<void>
+  fetchTournaments: (page: number) => Promise<void>
   fetchTournamentsParticipants: (tournament_id: string) => Promise<void>
   addTournament: (
     details: Omit<Tournament, 'id' | 'created_at' | 'winner_team_id'>
@@ -425,12 +132,17 @@ export interface BadmintonState {
     scores: Omit<MatchScore, 'id' | 'match_id'>[]
   ) => Promise<void>
   fetchTeamsFromCurrentTournament: () => Promise<void>
+  fetchTournamentDetails: (tournamentId: string) => Promise<void> // NEW action
+
   setActiveTeams: (active: Team[]) => Promise<void>
+  fetchMatch: () => Promise<void>
+  fetchMatchScore: () => Promise<void>
 }
 
 // ============================================================================
 // 3. ZUSTAND STORE IMPLEMENTATION
 // ============================================================================
+export const PAGE_SIZE = 10; // We want to load 10 tournaments at a time
 
 export const useBadmintonStore = create<BadmintonState>((set, get) => ({
   // --- INITIAL STATE ---
@@ -439,11 +151,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
   tournaments: [],
   activeTournamentParticipants: [],
   activeTournamentId: null,
+  activeTournament: null, // NEW
+
   activeTeams: [],
   matches: [],
   matchScores: [],
   loading: false,
   error: null,
+  currentPage: 0,
+  totalTournaments: 0,
 
   // --- PLAYER ACTIONS ---
   setActiveTeams: async (active: Team[]) => {
@@ -528,12 +244,61 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
   },
 
   // --- TOURNAMENT ACTIONS ---
-  fetchTournaments: async () => {
+  fetchTournaments: async (page: number) => {
     set({ loading: true, error: null })
+    const selectQuery = `
+    *,
+    winner_team:teams!tournaments_winner_team_id_fkey2 (
+      *,
+      player_1:players!teams_player_1_id_fkey(*),
+      player_2:players!teams_player_2_id_fkey(*)
+    )
+  `
     try {
-      const { data, error } = await supabase.from('tournaments').select('*')
+      const from = page * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+
+      const { data, error, count } = await supabase
+        .from('tournaments')
+        .select(selectQuery, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to)
       if (error) throw error
-      set({ tournaments: data || [] })
+      set({
+        tournaments: data || [],
+        totalTournaments: count || 0,
+        currentPage: page,
+      })
+    } catch (error: any) {
+      set({ error: error.message })
+    } finally {
+      set({ loading: false })
+    }
+  },
+  fetchTournamentDetails: async (tournamentId: string) => {
+    set({ loading: true, error: null, activeTournament: null })
+
+    const selectQuery = `
+      *,
+      winner_team:teams!tournaments_winner_team_id_fkey2(*, player_1:players!teams_player_1_id_fkey(*), player_2:players!teams_player_2_id_fkey(*)),
+      matches (
+        *,
+        match_scores (*),
+        team_1:teams!matches_team_1_id_fkey (*, player_1:players!teams_player_1_id_fkey(*), player_2:players!teams_player_2_id_fkey(*)),
+        team_2:teams!matches_team_2_id_fkey (*, player_1:players!teams_player_1_id_fkey(*), player_2:players!teams_player_2_id_fkey(*))
+      )
+    `
+
+    try {
+      const { data, error } = await supabase
+        .from('tournaments')
+        .select(selectQuery)
+        .eq('id', tournamentId)
+        .single()
+
+      if (error) throw error
+
+      set({ activeTournament: data as TournamentWithDetails | null })
     } catch (error: any) {
       set({ error: error.message })
     } finally {
@@ -683,6 +448,8 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
         .from('matches')
         .select(selectQuery)
         .eq('tournament_id', tournamentId)
+        .order('created_at', { ascending: true })
+
       if (error) throw error
       set({ matches: data || [] })
     } catch (error: any) {
@@ -797,6 +564,38 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
       }))
     } catch (error: any) {
       set({ error: `Failed to finish match: ${error.message}` })
+    } finally {
+      set({ loading: false })
+    }
+  },
+  fetchMatchScore: async () => {
+    set({ loading: true, error: null })
+    try {
+      const { data, error } = await supabase
+        .from('match_scores')
+        .select(`*`)
+      if (error) throw error
+      set({
+        matchScores: data || [],
+      })
+    } catch (error: any) {
+      set({ error: error.message })
+    } finally {
+      set({ loading: false })
+    }
+  },
+  fetchMatch: async () => {
+    set({ loading: true, error: null })
+    try {
+      const { data, error } = await supabase
+        .from('matches')
+        .select(`*`)
+      if (error) throw error
+      set({
+        matches: data || [],
+      })
+    } catch (error: any) {
+      set({ error: error.message })
     } finally {
       set({ loading: false })
     }

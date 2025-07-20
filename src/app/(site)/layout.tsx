@@ -11,7 +11,6 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   const fetchPlayers = useBadmintonStore((s) => s.fetchPlayers)
-
   useEffect(() => {
     fetchPlayers().then(() => {
       const players = useBadmintonStore.getState().players
