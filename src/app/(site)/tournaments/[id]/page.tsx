@@ -1,10 +1,7 @@
 'use client'
 
-import ScoreEntryCard from '@/components/startMatch/ScoreEntryCard'
 import TournamentDetails from '@/components/Tournaments/TounamentDetails'
-import { getTeamDetails } from '@/hooks/helperFunction'
 import { useBadmintonStore } from '@/store/useBadmintonStore'
-import { Trophy, Tickets, Calendar, Users, ListChecks } from 'lucide-react'
 import React, { use, useEffect } from 'react'
 
 // The 'params' object is passed directly, not as a Promise.
@@ -14,11 +11,8 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
     // This is the fix: Unwrap the promise to get the params object
     const resolvedParams = use(params);
     const { id } = resolvedParams;
-    const {tournaments , activeTournament ,fetchTournamentDetails, matches} = useBadmintonStore()
-    console.log("🚀 ~ Page ~ activeTournament:", activeTournament)
-    console.log("🚀 ~ Page ~ tournaments:", tournaments)
+    const { activeTournament ,fetchTournamentDetails} = useBadmintonStore()
   
-    const currentTournament = tournaments.filter((item)=> item.id === id)
     
     useEffect(() => {
         fetchTournamentDetails(id)

@@ -13,7 +13,7 @@ import Image from 'next/image'
 // The props for our TeamCard component.
 // It expects the full team object with player details, plus the calculated stats.
 interface TeamCardProps {
-  team: TeamWithPlayers
+  team: TeamWithPlayers 
   stats: {
     matchesPlayed: number
     totalWins: number

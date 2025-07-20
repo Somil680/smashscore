@@ -171,8 +171,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
       const { data, error } = await supabase.from('players').select('*')
       if (error) throw error
       set({ players: data || [] })
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -192,9 +199,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
         return data
       }
       return null
-    } catch (error: any) {
-      set({ error: error.message })
-      return null
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }return null
     } finally {
       set({ loading: false })
     }
@@ -213,8 +226,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
       const { data, error } = await supabase.from('teams').select(selectQuery)
       if (error) throw error
       set({ teams: data || [] })
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -235,9 +255,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
         return data
       }
       return null
-    } catch (error: any) {
-      set({ error: error.message })
-      return null
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      } return null
     } finally {
       set({ loading: false })
     }
@@ -269,8 +295,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
         totalTournaments: count || 0,
         currentPage: page,
       })
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      } 
     } finally {
       set({ loading: false })
     }
@@ -299,8 +332,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
       if (error) throw error
 
       set({ activeTournament: data as TournamentWithDetails | null })
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -325,8 +365,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
 
       // The type of `data` now matches `DetailedTournamentParticipant[]`
       set({ activeTournamentParticipants: data || [] })
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -349,9 +396,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
         return data
       }
       return null
-    } catch (error: any) {
-      set({ error: error.message })
-      return null
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }return null
     } finally {
       set({ loading: false })
     }
@@ -360,7 +413,7 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
   addTeamToTournament: async (tournament_id, team_id) => {
     set({ loading: true, error: null })
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tournament_participants')
         .upsert(
           { tournament_id, team_id },
@@ -387,8 +440,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
           ],
         }
       })
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -419,9 +479,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
       console.log(
         `Tournament ${tournamentId} winner has been set to ${winnerTeamId}`
       )
-    } catch (error: any) {
-      set({ error: error.message })
-      console.error('Failed to set tournament winner:', error)
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -452,8 +518,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
 
       if (error) throw error
       set({ matches: data || [] })
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -505,9 +578,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
       }
 
       return newDetailedMatch
-    } catch (error: any) {
-      set({ error: error.message })
-      return null
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }return null
     } finally {
       set({ loading: false })
     }
@@ -524,8 +603,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
 
       // Refresh the matches in the state to reflect the update
       get().fetchMatchesForTournament(get().activeTournamentId!)
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -562,8 +648,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
           ...(insertedScores || []),
         ],
       }))
-    } catch (error: any) {
-      set({ error: `Failed to finish match: ${error.message}` })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -571,15 +664,20 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
   fetchMatchScore: async () => {
     set({ loading: true, error: null })
     try {
-      const { data, error } = await supabase
-        .from('match_scores')
-        .select(`*`)
+      const { data, error } = await supabase.from('match_scores').select(`*`)
       if (error) throw error
       set({
         matchScores: data || [],
       })
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -587,15 +685,20 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
   fetchMatch: async () => {
     set({ loading: true, error: null })
     try {
-      const { data, error } = await supabase
-        .from('matches')
-        .select(`*`)
+      const { data, error } = await supabase.from('matches').select(`*`)
       if (error) throw error
       set({
         matches: data || [],
       })
-    } catch (error: any) {
-      set({ error: error.message })
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }
     } finally {
       set({ loading: false })
     }
@@ -632,10 +735,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
         //     ...finalteam,
         //   ],
         // }))
-      } catch (error: any) {
-        set({
-          error: `Team created, but failed to add to tournament: ${error.message}`,
-        })
+      } catch (error: unknown) {
+        // First, check if the error is an actual Error object
+        if (error instanceof Error) {
+          // If it is, we can safely access its message property
+          set({ error: error.message })
+        } else {
+          // If it's something else (like a string), convert it to a string
+          set({ error: String(error) })
+        }
       } finally {
         set({ loading: false })
       }
@@ -684,9 +792,15 @@ export const useBadmintonStore = create<BadmintonState>((set, get) => ({
       // If team does not exist, create it by calling addTeam.
       //   console.log('No existing team found, creating a new one...')
       return get().addTeam(player1Id, player2Id)
-    } catch (error: any) {
-      set({ error: error.message })
-      return null
+    } catch (error: unknown) {
+      // First, check if the error is an actual Error object
+      if (error instanceof Error) {
+        // If it is, we can safely access its message property
+        set({ error: error.message })
+      } else {
+        // If it's something else (like a string), convert it to a string
+        set({ error: String(error) })
+      }return null
     } finally {
       set({ loading: false })
     }

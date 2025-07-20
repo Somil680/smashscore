@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Button } from '../ui/button'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { Player, Team, useBadmintonStore } from '@/store/useBadmintonStore'
 import { createAndRegisterTeam } from '@/hooks/createAndRegisterTeam'
 import { generateFixtures } from '@/lib/FixtureGenerator'

@@ -1,6 +1,5 @@
 'use client'
 import { TournamentPagination } from '@/components/Tournaments/TournamentsPagination'
-import { Button } from '@/components/ui/button'
 import { getTeamDetails } from '@/hooks/helperFunction'
 import { TournamentWithWinner } from '@/lib/type'
 import { useBadmintonStore } from '@/store/useBadmintonStore'
