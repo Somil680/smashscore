@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --primary: #4ade80; /* lime-400 */
+  --secondary: #60a5fa; /* blue-400 */
+  --accent: #818cf8; /* indigo-400 */
+  --card-bg: #181f2a;
+  --glass-bg: rgba(24, 31, 42, 0.85);
+  --border: #232c3b;
+  --shadow: 0 8px 32px 0 rgba(31, 41, 55, 0.25);
+  --input-bg: #232c3b;
+  --input-border: #334155;
+  --input-focus: #4ade80;
+  --ring: #60a5fa;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: linear-gradient(135deg, #0a0a0a 0%, #181f2a 60%, #232c3b 100%);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  transition:
+    background 0.5s,
+    color 0.5s;
+}
+
+.card,
+.glass {
+  background: var(--glass-bg);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+
+input,
+/* select, */
+textarea {
+  background: var(--input-bg);
+  color: var(--foreground);
+  border: 1.5px solid var(--input-border);
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
+}
+input:focus,
+/* select:focus, */
+textarea:focus {
+  outline: none;
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+/* button,
+.btn {
+  border: 1px solid linear-gradient(90deg, var(--primary), var(--secondary));
+  color: #fff;
+  border: none;
+  border-radius: 1rem;
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  box-shadow: 0 4px 16px 0 rgba(76, 201, 240, 0.1);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+} */
+button:hover,
+.btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 32px 0 rgba(76, 201, 240, 0.18);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #232c3b;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 8px;
+}
+
+/* Utility classes for glassmorphism and card look */
+.glass {
+  background: var(--glass-bg);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+.card {
+  background: var(--card-bg);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+/* Remove light theme overrides */
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
