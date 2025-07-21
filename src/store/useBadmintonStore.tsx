@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import { TournamentWithWinner } from '@/lib/type'
-import { MatchWithDetails } from '@/components/startMatch/ScoreEntryCard'
+import { MatchWithDetails } from './type'
 
 // This is a placeholder for your actual Supabase client.
 // You would typically initialize this in a separate file (e.g., 'lib/supabase.ts')
@@ -47,7 +47,7 @@ export interface Match {
   id: string
   tournament_id: string
   team_1_id: string
-  team_2_id: string
+  team_2_id: string | null
   winner_team_id?: string
   tag?: string // 'Semi-Final', 'Round 1', etc.
   match_date: string

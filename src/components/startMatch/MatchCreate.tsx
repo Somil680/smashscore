@@ -6,6 +6,7 @@ import { Trophy, Calendar, Users, ListChecks } from 'lucide-react'
 import FinalWinnerChecker from './FinalWinnerChecker'
 import { getTeamDetails } from '@/hooks/helperFunction'
 import { useRouter } from 'next/navigation'
+import { MatchWithDetails, MatchScore } from '@/store/type'
 export interface Team {
   id: string
   // ... other team properties
@@ -19,13 +20,6 @@ export interface Match {
   tournament_id: string
   tag?: string
   // ... other match properties
-}
-
-export interface MatchScore {
-  match_id: string
-  team_1_score: number
-  team_2_score: number
-  // ... other score properties
 }
 
 export interface PlayoffFixture {
@@ -48,8 +42,8 @@ const MatchCreate = () => {
     fetchTournamentsParticipants,
     setTournamentWinner,
   } = useBadmintonStore()
-    console.log("🚀 ~ MatchCreate ~ matches:", matches)
-   const router = useRouter()
+  console.log('🚀 ~ MatchCreate ~ matches:', matches)
+  const router = useRouter()
   useEffect(() => {
     if (!activeTournamentId || activeTeams.length === 0) return
     fetchMatchesForTournament(activeTournamentId)
@@ -78,8 +72,6 @@ const MatchCreate = () => {
       finalMatch: finalMatch || null,
     }
   }, [matches])
-
-
 
   const teamStats = useMemo(() => {
     if (activeTeams.length === 0) return []
@@ -134,10 +126,13 @@ const MatchCreate = () => {
     )
     return groupStageMatches.every((match) => !!match.winner_team_id)
   }, [matches])
-  console.log("🚀 ~ allMatchesCompleted ~ allMatchesCompleted:", allMatchesCompleted)
+  console.log(
+    '🚀 ~ allMatchesCompleted ~ allMatchesCompleted:',
+    allMatchesCompleted
+  )
 
   const handleSaveResult = (
-    match: Match,
+    match: MatchWithDetails | Match,
     scoresMatch: {
       game_number: number
       team_1_score: number
@@ -145,8 +140,14 @@ const MatchCreate = () => {
     }[],
     winnerTeamId: string
   ) => {
+    if (!activeTournamentId) return
     // First, save the result of the match that was just played
-    finishMatch(match.id, winnerTeamId, scoresMatch)
+    const scoresToSave: Omit<MatchScore, 'id'>[] = scoresMatch.map((s) => ({
+      ...s,
+      match_id: match.id,
+      tournament_id: activeTournamentId,
+    }))
+    finishMatch(match.id, winnerTeamId, scoresToSave)
 
     // --- THIS IS THE NEW CONNECTIVITY LOGIC ---
     // If the match that just finished was a semi-final...
@@ -165,38 +166,43 @@ const MatchCreate = () => {
       }
     }
   }
-  
+
   const handleDeclareWinner = () => {
     if (finalMatch && finalMatch.winner_team_id && activeTournamentId) {
       setTournamentWinner(activeTournamentId, finalMatch.winner_team_id)
-     router.replace(`tournaments/${activeTournamentId}`)
+      router.replace(`tournaments/${activeTournamentId}`)
     } else {
       alert('Final match is not yet complete.')
     }
   }
 
+  const activeTournament = tournaments.find((t) => t.id === activeTournamentId)
+
+  if (!activeTournament) {
+    return <div>Loading or tournament not found...</div>
+  }
   return (
     <div className="space-y-4 ">
       <div className="bg-gradient-to-r from-lime-400 via-blue-500 to-purple-400 p-[2px] rounded-2xl">
         <div className="bg-[#111827] rounded-2xl p-5 text-white">
           <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
-            <Trophy size={20} /> {tournaments[0].name}
+            <Trophy size={20} /> {activeTournament.name}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Calendar size={16} />
               <span>
                 Created:{' '}
-                {new Date(tournaments[0].created_at).toLocaleDateString()}
+                {new Date(activeTournament.created_at).toLocaleDateString()}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Users size={16} />
-              <span>Type: {tournaments[0].tournament_type}</span>
+              <span>Type: {activeTournament.tournament_type}</span>
             </div>
             <div className="flex items-center gap-2">
               <ListChecks size={16} />
-              <span>Match Type: {tournaments[0].match_type}</span>
+              <span>Match Type: {activeTournament.match_type}</span>
             </div>
             <div className="flex items-center gap-2">
               <ListChecks size={16} />
@@ -226,7 +232,7 @@ const MatchCreate = () => {
       {/* Render the button to generate playoffs */}
       {finalMatch &&
         finalMatch.winner_team_id &&
-        !tournaments[0].winner_team_id && (
+        !activeTournament.winner_team_id && (
           <div className="flex justify-center py-4">
             <button
               onClick={handleDeclareWinner}
@@ -237,37 +243,38 @@ const MatchCreate = () => {
             </button>
           </div>
         )}
-  
-       <FinalWinnerChecker teamStats={teamStats} />
+
+      <FinalWinnerChecker teamStats={teamStats} />
       <div className="flex  flex-wrap gap-4">
         {teamStats
           .sort((a, b) => b.pointDifference - a.pointDifference)
           .map((team) => {
-              const name = activeTournamentParticipants.filter((id) => id.team_id === team.id)
-              console.log("🚀 ~ .map ~ name:", name)
-              const team1Details = getTeamDetails(name[0]?.team)
-          return (
-            <div
-              key={team.id}
-              className="bg-transparent text-white p-[1px] rounded-xl w-full max-w-[190px]"
-            >
-              <div className="bg-[#111827] rounded-xl px-3 py-2 flex flex-col border border-transparent bg-clip-padding">
-                <h3 className="text-sm font-semibold text-white">
-                  {team1Details.teamName}
-                </h3>
-                <div className="flex justify-between mt-1">
-                  <span className="text-xs text-lime-400 font-medium">
-                    Points: {team.pointDifference}
-                  </span>
-                  <span className="text-xs text-blue-500 font-medium">
-                    Wins: {team.wins}
-                  </span>
+            const participantInfo = activeTournamentParticipants.find(
+              (p) => p.team_id === team.id
+            )
+            const teamDetails = getTeamDetails(participantInfo?.team)
+            return (
+              <div
+                key={team.id}
+                className="bg-transparent text-white p-[1px] rounded-xl w-full max-w-[190px]"
+              >
+                <div className="bg-[#111827] rounded-xl px-3 py-2 flex flex-col border border-transparent bg-clip-padding">
+                  <h3 className="text-sm font-semibold text-white">
+                    {teamDetails.teamName}
+                  </h3>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-xs text-lime-400 font-medium">
+                      Points: {team.pointDifference}
+                    </span>
+                    <span className="text-xs text-blue-500 font-medium">
+                      Wins: {team.wins}
+                    </span>
+                  </div>
                 </div>
+                <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-lime-400 via-blue-500 to-purple-400 z-[-1]" />
               </div>
-              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-lime-400 via-blue-500 to-purple-400 z-[-1]" />
-            </div>
-          )}
-          )}
+            )
+          })}
       </div>
     </div>
   )

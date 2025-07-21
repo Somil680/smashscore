@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Trophy, BarChart3, Activity, User2 } from 'lucide-react'
 import Image from 'next/image'
 import { Player } from '@/store/useBadmintonStore'
 
@@ -30,13 +29,13 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
               {player.name}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Joined: {new Date(player.createdAt).toLocaleDateString()}
+              Joined: {new Date(player.created_at).toLocaleDateString()}
             </p>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        {/* <div className="grid grid-cols-2 gap-4 text-sm">
           <Stat
             label="Matches"
             icon={<BarChart3 />}
@@ -53,37 +52,37 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
             icon={<User2 />}
             value={player.totalPointsScored}
           />
-        </div>
+        </div> */}
 
         {/* Sync Status */}
-        {!player.synced && (
+        {/* {!player.synced && (
           <div className="text-xs text-orange-500 font-medium mt-2">
             Not synced with server
           </div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   )
 }
 
-const Stat = ({
-  label,
-  value,
-  icon,
-}: {
-  label: string
-  value: number
-  icon: React.ReactNode
-}) => (
-  <div className="flex items-center space-x-2">
-    <div className="text-blue-500">{icon}</div>
-    <div>
-      <div className="text-gray-800 dark:text-gray-100 font-semibold">
-        {value}
-      </div>
-      <div className="text-gray-500 text-xs">{label}</div>
-    </div>
-  </div>
-)
+// const Stat = ({
+//   label,
+//   value,
+//   icon,
+// }: {
+//   label: string
+//   value: number
+//   icon: React.ReactNode
+// }) => (
+//   <div className="flex items-center space-x-2">
+//     <div className="text-blue-500">{icon}</div>
+//     <div>
+//       <div className="text-gray-800 dark:text-gray-100 font-semibold">
+//         {value}
+//       </div>
+//       <div className="text-gray-500 text-xs">{label}</div>
+//     </div>
+//   </div>
+// )
 
 export default PlayerCard

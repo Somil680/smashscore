@@ -31,7 +31,9 @@ const TournamentPage = () => {
         <div>loading</div>
       ) : (
         tournaments.map((item) => {
-          const teamName = getTeamDetails(item.winner_team)
+  const teamName = item.winner_team_id
+    ? getTeamDetails( item.winner_team)
+    : { teamName: 'Winner TBA', playerImages: [], teamId: null }
           return (
             <div
               key={item.id}
