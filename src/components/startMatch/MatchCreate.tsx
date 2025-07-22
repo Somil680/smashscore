@@ -1,12 +1,13 @@
 'use client'
 import React, { useEffect, useMemo } from 'react'
 import ScoreEntryCard from './ScoreEntryCard'
-import { useBadmintonStore } from '@/store/useBadmintonStore'
+// import { useBadmintonStore } from '@/store/useBadmintonStore'
 import { Trophy, Calendar, Users, ListChecks } from 'lucide-react'
 import FinalWinnerChecker from './FinalWinnerChecker'
 import { getTeamDetails } from '@/hooks/helperFunction'
 import { useRouter } from 'next/navigation'
 import { MatchWithDetails, MatchScore } from '@/store/type'
+import useTournamentStore from '@/store/useTournamentStore'
 export interface Team {
   id: string
   // ... other team properties
@@ -32,53 +33,53 @@ const MatchCreate = () => {
   const {
     tournaments,
     activeTournamentId,
-    activeTeams,
-    matches,
     activeTournamentParticipants,
+    setTournamentWinner,
+    matches,
     fetchMatchesForTournament,
     finishMatch,
     updateMatch,
     matchScores,
-    fetchTournamentsParticipants,
-    setTournamentWinner,
-  } = useBadmintonStore()
-  console.log('🚀 ~ MatchCreate ~ matches:', matches)
+  } = useTournamentStore()
+
+  // const activeTeams = activeTournamentParticipants.map((p) => p.team)
+  // console.log("🚀 ~ MatchCreate ~ activeTeams:", activeTeams)
   const router = useRouter()
-  useEffect(() => {
-    if (!activeTournamentId || activeTeams.length === 0) return
-    fetchMatchesForTournament(activeTournamentId)
-    fetchTournamentsParticipants(activeTournamentId)
-  }, [activeTournamentId, fetchMatchesForTournament])
+useEffect(() => {
+  if (!activeTournamentId) return
+  fetchMatchesForTournament(activeTournamentId)
+}, [activeTournamentId])
 
   const { finalMatch } = useMemo(() => {
     if (matches.length === 0)
       return {
-        groupStageCompleted: false,
-        playoffsExist: false,
-        finalMatch: null,
-      }
-
-    const groupStageMatches = matches.filter(
-      (m) => m.tag !== 'Semi-Final' && m.tag !== 'Final Match'
-    )
+    groupStageCompleted: false,
+    playoffsExist: false,
+    finalMatch: null,
+  }
+  
+  const groupStageMatches = matches.filter(
+    (m) => m.tag !== 'Semi-Final' && m.tag !== 'Final Match'
+  )
+  console.log("🚀 ~ const{finalMatch}=useMemo ~ groupStageMatches:", groupStageMatches)
     const semiFinalMatch = matches.find((m) => m.tag === 'Semi-Final')
     const finalMatch = matches.find((m) => m.tag === 'Final Match')
+    console.log("🚀 ~ const{finalMatch}=useMemo ~ finalMatch:", finalMatch)
 
     return {
       groupStageCompleted: groupStageMatches.every(
         (match) => !!match.winner_team_id
       ),
       playoffsExist: !!semiFinalMatch,
-      finalMatch: finalMatch || null,
+      finalMatch: finalMatch,
     }
   }, [matches])
 
   const teamStats = useMemo(() => {
-    if (activeTeams.length === 0) return []
-
+    if (activeTournamentParticipants.length === 0) return []
     // This logic is similar to your generatePlayoffFixtures function
-    const stats = activeTeams.map((team) => ({
-      id: team.id,
+    const stats = activeTournamentParticipants.map((team) => ({
+      id: team.team.id,
       wins: 0,
       pointDifference: 0,
       team,
@@ -116,21 +117,18 @@ const MatchCreate = () => {
       if (b.wins !== a.wins) return b.wins - a.wins
       return b.pointDifference - a.pointDifference
     })
-  }, [matches, matchScores, activeTeams])
+  }, [activeTournamentParticipants, matches, matchScores])
 
-  const allMatchesCompleted = useMemo(() => {
-    if (matches.length === 0) return false
-    // We only check for matches without a playoff tag
-    const groupStageMatches = matches.filter(
-      (m) => m.tag !== 'Semi-Final' && m.tag !== 'Final Match'
-    )
-    return groupStageMatches.every((match) => !!match.winner_team_id)
-  }, [matches])
-  console.log(
-    '🚀 ~ allMatchesCompleted ~ allMatchesCompleted:',
-    allMatchesCompleted
-  )
+  // const allMatchesCompleted = useMemo(() => {
+  //   if (matches.length === 0) return false
+  //   // We only check for matches without a playoff tag
+  //   const groupStageMatches = matches.filter(
+  //     (m) => m.tag !== 'Semi-Final' && m.tag !== 'Final Match'
+  //   )
+  //   return groupStageMatches.every((match) => !!match.winner_team_id)
+  // }, [matches])
 
+  
   const handleSaveResult = (
     match: MatchWithDetails | Match,
     scoresMatch: {
@@ -145,7 +143,7 @@ const MatchCreate = () => {
     const scoresToSave: Omit<MatchScore, 'id'>[] = scoresMatch.map((s) => ({
       ...s,
       match_id: match.id,
-      tournament_id: activeTournamentId,
+      // tournament_id: activeTournamentId,
     }))
     finishMatch(match.id, winnerTeamId, scoresToSave)
 
@@ -158,9 +156,9 @@ const MatchCreate = () => {
       )
 
       if (finalMatch) {
-        console.log(
-          `Updating Final Match (${finalMatch.id}) with winner: ${winnerTeamId}`
-        )
+        // console.log(
+        //   `Updating Final Match (${finalMatch.id}) with winner: ${winnerTeamId}`
+        // )
         // Update the final match to set team_2_id to the winner of the semi-final
         updateMatch(finalMatch.id, { team_2_id: winnerTeamId })
       }
@@ -175,9 +173,30 @@ const MatchCreate = () => {
       alert('Final match is not yet complete.')
     }
   }
+  const TopTeams = teamStats.sort((a, b) => b.pointDifference - a.pointDifference)
+  .map((team) => team.team.team)
+  console.log("🚀 ~ MatchCreate ~ TopTeams:", TopTeams)
 
+    // const handleGeneratePlayoffs = () => {
+    //   if (!activeTournamentId) return
+
+    //   // Generate the fixtures
+    //   const tieMatches = generateTieBreakerFixtures(
+    //     activeTournamentParticipants.map((p) => p.team),
+    //     activeTournamentId
+    //   )
+
+    //   // Add each new match to the database
+    //   tieMatches.forEach((fixture) => {
+    //     addMatch({
+    //       tournament_id: fixture.tournament_id,
+    //       team_1_id: fixture.team_1_id,
+    //       team_2_id: fixture.team_2_id,
+    //       tag: fixture.tag,
+    //     })
+    //   })
+    // }
   const activeTournament = tournaments.find((t) => t.id === activeTournamentId)
-
   if (!activeTournament) {
     return <div>Loading or tournament not found...</div>
   }
@@ -223,7 +242,7 @@ const MatchCreate = () => {
         <ScoreEntryCard
           key={match.id}
           match={match}
-          max_game_set={1}
+          max_game_set={activeTournament.max_game_set}
           onSave={(match, scores, winnerId) => {
             handleSaveResult(match, scores, winnerId)
           }}
@@ -243,38 +262,51 @@ const MatchCreate = () => {
             </button>
           </div>
         )}
-
-      <FinalWinnerChecker teamStats={teamStats} />
+      <FinalWinnerChecker teamStats={TopTeams} />
+      {/* {allMatchesCompleted  && (
+        <div className="flex justify-center py-4">
+          <button
+            onClick={handleGeneratePlayoffs}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 shadow-lg"
+          >
+            <Play size={20} />
+            Generate Semi-Final & Final
+          </button>
+        </div>
+      )} */}
       <div className="flex  flex-wrap gap-4">
         {teamStats
           .sort((a, b) => b.pointDifference - a.pointDifference)
-          .map((team) => {
-            const participantInfo = activeTournamentParticipants.find(
-              (p) => p.team_id === team.id
-            )
-            const teamDetails = getTeamDetails(participantInfo?.team)
-            return (
-              <div
-                key={team.id}
-                className="bg-transparent text-white p-[1px] rounded-xl w-full max-w-[190px]"
-              >
-                <div className="bg-[#111827] rounded-xl px-3 py-2 flex flex-col border border-transparent bg-clip-padding">
-                  <h3 className="text-sm font-semibold text-white">
-                    {teamDetails.teamName}
-                  </h3>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-xs text-lime-400 font-medium">
-                      Points: {team.pointDifference}
-                    </span>
-                    <span className="text-xs text-blue-500 font-medium">
-                      Wins: {team.wins}
-                    </span>
+          .map(
+            (team: { id: string; pointDifference: number; wins: number }) => {
+              const participantInfo = activeTournamentParticipants.find(
+                (p) => p.team_id === team.id
+              )
+              if (!participantInfo) return null
+              const teamDetails = getTeamDetails(participantInfo.team)
+              return (
+                <div
+                  key={team.id}
+                  className="bg-transparent text-white p-[1px] rounded-xl w-full max-w-[190px]"
+                >
+                  <div className="bg-[#111827] rounded-xl px-3 py-2 flex flex-col border border-transparent bg-clip-padding">
+                    <h3 className="text-sm font-semibold text-white">
+                      {teamDetails.teamName}
+                    </h3>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-xs text-lime-400 font-medium">
+                        Points: {team.pointDifference}
+                      </span>
+                      <span className="text-xs text-blue-500 font-medium">
+                        Wins: {team.wins}
+                      </span>
+                    </div>
                   </div>
+                  <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-lime-400 via-blue-500 to-purple-400 z-[-1]" />
                 </div>
-                <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-lime-400 via-blue-500 to-purple-400 z-[-1]" />
-              </div>
-            )
-          })}
+              )
+            }
+          )}
       </div>
     </div>
   )

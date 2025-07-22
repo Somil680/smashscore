@@ -1,9 +1,9 @@
-"use client"
+'use client'
 import PlayerCard from '../../../components/Player/Playercard'
-import { useBadmintonStore } from '@/store/useBadmintonStore'
+import usePlayerStore from '@/store/usePlayerStore'
 
 const PlayerList = () => {
-  const { players } = useBadmintonStore()
+  const { players } = usePlayerStore()
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">

@@ -1,5 +1,4 @@
-import { MatchWithDetails } from "@/store/type"
-import { MatchScore } from "@/store/useBadmintonStore"
+import { MatchWithDetails, MatchScore } from '@/store/type'
 
 /**
  * Calculates the total matches played, wins, and score for a single team.
@@ -9,17 +8,18 @@ import { MatchScore } from "@/store/useBadmintonStore"
  * @param {Array} matchScores - The array of all score objects from the store.
  * @returns {object} An object containing matchesPlayed, totalWins, and totalScore.
  */
- export function calculateTeamStats(teamId: string,
+export function calculateTeamStats(
+  teamId: string,
   matches: MatchWithDetails[],
   matchScores: MatchScore[]
-)  {
+) {
   let matchesPlayed = 0
   let totalWins = 0
   let totalScore = 0
 
   // Find all matches this team participated in
   const teamMatches = matches.filter(
-    (match) => match.team_1.id === teamId || match.team_2.id === teamId
+    (match) => match.team_1.id === teamId || match.team_2?.id === teamId
   )
 
   // 1. Calculate Matches Played
@@ -39,7 +39,7 @@ import { MatchScore } from "@/store/useBadmintonStore"
     for (const score of scoresForThisMatch) {
       if (match.team_1.id === teamId) {
         totalScore += score.team_1_score
-      } else if (match.team_2.id === teamId) {
+      } else if (match.team_2?.id === teamId) {
         totalScore += score.team_2_score
       }
     }

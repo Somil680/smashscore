@@ -7,9 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select'
-import { useBadmintonStore } from '@/store/useBadmintonStore'
 import { Loader2 } from 'lucide-react'
 import { generateTournamentName } from '@/hooks/generateTournamentName'
+import useTournamentStore from '@/store/useTournamentStore'
 
 export type MatchType = 'singles' | 'doubles'
 
@@ -25,7 +25,7 @@ const MATCH_TYPES = [
 export default function TournamentFormatSelector({
   onNext,
 }: TournamentFormatSelectorProps) {
-  const { addTournament, loading, error } = useBadmintonStore()
+  const { addTournament, loading, error } = useTournamentStore()
   const newName = generateTournamentName()
 
   const [inputData, setInputData] = useState<{

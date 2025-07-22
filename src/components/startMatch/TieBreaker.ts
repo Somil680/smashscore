@@ -178,14 +178,16 @@ export interface TeamStats {
  * @returns An array of new playoff match objects.
  */
 export function generateTieBreakerFixtures(
-  topTeams: TeamStats[], // FIX: Expects the full TeamStats object
+  topTeams: Team[], // FIX: Expects the full TeamStats object
   activeTournamentId: string | null
 ): PlayoffFixtureData[] {
+  console.log("🚀 ~ activeTournamentId:", activeTournamentId)
+  console.log("🚀 ~ topTeams:", topTeams)
   
   if (!activeTournamentId) return [];
 
   // Case 1: Exactly 2 teams are provided -> This is the Final
-  if (topTeams.length === 2) {
+  if (topTeams.length === 3) {
     return [
       {
         tournament_id: activeTournamentId,
@@ -197,7 +199,7 @@ export function generateTieBreakerFixtures(
   }
 
   // Case 2: 3 or more teams -> Create a Semi-Final and a Final with a placeholder
-  if (topTeams.length >= 3) {
+  if (topTeams.length >= 4) {
     // The teams are assumed to be pre-sorted: Rank 1 is topTeams[0], etc.
     return [
       // The Semi-Final match between Rank 2 and Rank 3

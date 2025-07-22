@@ -12,11 +12,11 @@ import {
   Tickets,
   Crown,
 } from 'lucide-react'
-import { TeamWithPlayers } from '@/lib/type'
 import {
+  TeamWithPlayers,
   MatchWithScoresAndDetails,
   TournamentWithDetails,
-} from '@/store/useBadmintonStore'
+} from '@/store/type'
 // import {
 //   TournamentWithDetails,
 //   MatchWithScoresAndDetails,

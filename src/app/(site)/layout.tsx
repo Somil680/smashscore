@@ -1,7 +1,6 @@
 'use client'
 import Navbar from '@/components/Navbar'
-import { useBadmintonStore } from '@/store/useBadmintonStore'
-// import { useSmashScoreStore } from '@/store/useSmashScoreStore'
+import usePlayerStore from '@/store/usePlayerStore'
 import React, { useEffect } from 'react'
 // import "../../global.css";
 
@@ -10,15 +9,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const fetchPlayers = useBadmintonStore((s) => s.fetchPlayers)
+  const { fetchPlayers, players } = usePlayerStore()
   useEffect(() => {
+
     fetchPlayers().then(() => {
-      const players = useBadmintonStore.getState().players
       console.log('Fetched players:', players)
     })
-  }, [fetchPlayers])
+  }, [])
 
-  // useEffect(() => {
+  // useEffect(() =>
   //   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
   //     e.preventDefault()
   //     e.returnValue = '' // Required for Chrome to show alert

@@ -250,10 +250,9 @@ export default function ScoreEntryCard({
   const [scoresA, setScoresA] = React.useState<number[]>([])
   const [scoresB, setScoresB] = React.useState<number[]>([])
   const [completed, setCompleted] = React.useState(!!match.winner_team_id)
-  const [winner, setWinner] = React.useState<string | null>(
-    match.winner_team_id
-  )
-
+const [winner, setWinner] = React.useState<string | null>(
+  match.winner_team_id ?? null
+)
   React.useEffect(() => {
     setScoresA(Array(max_game_set).fill(0))
     setScoresB(Array(max_game_set).fill(0))

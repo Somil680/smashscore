@@ -1,18 +1,25 @@
 import React, { useState } from 'react'
 import { Button } from '../ui/button'
 import { Loader2, Sparkles } from 'lucide-react'
-import { Player, Team, useBadmintonStore } from '@/store/useBadmintonStore'
-import { createAndRegisterTeam } from '@/hooks/createAndRegisterTeam'
+import { Player, TeamWithPlayers } from '@/store/type'
 import { generateFixtures } from '@/lib/FixtureGenerator'
 import Image from 'next/image'
+import useTournamentStore from '@/store/useTournamentStore'
+import useTeamStore from '@/store/useTeamStore'
 interface TeamBuilderProps {
   allPlayers: Player[]
   onNext: () => void
 }
 
 export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
-  const { activeTournamentId, setActiveTeams, addMatch, tournaments, loading } =
-    useBadmintonStore()
+  const {
+    activeTournamentId,
+    addMatch,
+    tournaments,
+    loading,
+    setActiveTournamentParticipants,
+  } = useTournamentStore()
+  const { getOrCreateTeam } = useTeamStore()
   const [selected, setSelected] = useState<string[]>([])
   const [team, setTeams] = useState<string[][]>([])
 
@@ -36,44 +43,45 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
   const handleCheckMatchTypeSingle =
     tournaments[0].match_type === 'singles' ? true : false
 
-    const handleAutoGenerateTeams = () => {
-      const newTeams: string[][] = []
+  const handleAutoGenerateTeams = () => {
+    const newTeams: string[][] = []
 
-      // Get shuffled player IDs
-      let ids = [...availablePlayers.map((p) => p.id)]
-      ids = ids.sort(() => Math.random() - 0.5)
+    // Get shuffled player IDs
+    let ids = [...availablePlayers.map((p) => p.id)]
+    ids = ids.sort(() => Math.random() - 0.5)
 
-      // Form teams of 2
-      while (ids.length >= 2) {
-        const p1 = ids[0]
-        const p2 = ids[1]
-        newTeams.push([p1, p2])
-        ids = ids.slice(2)
-      }
-
-      // If one player is left, make a single-player team
-      if (ids.length === 1) {
-        newTeams.push([ids[0]])
-      }
-
-      // Add to existing teams
-      setTeams((prev) => [...prev, ...newTeams])
-
-      // Clear selected
-      setSelected([])
+    // Form teams of 2
+    while (ids.length >= 2) {
+      const p1 = ids[0]
+      const p2 = ids[1]
+      newTeams.push([p1, p2])
+      ids = ids.slice(2)
     }
+
+    // If one player is left, make a single-player team
+    if (ids.length === 1) {
+      newTeams.push([ids[0]])
+    }
+
+    // Add to existing teams
+    setTeams((prev) => [...prev, ...newTeams])
+
+    // Clear selected
+    setSelected([])
+  }
 
   const handleNext = async () => {
     if (!activeTournamentId) return
     const createdTeams = await Promise.all(
       team.map(([player1, player2]) => {
-        return createAndRegisterTeam(activeTournamentId, player1, player2)
+        return getOrCreateTeam(player1, player2)
       })
     )
-    setActiveTeams(
-      (createdTeams ?? []).filter((team): team is Team => team !== null)
+
+    const validTeams = (createdTeams ?? []).filter(
+      (team): team is TeamWithPlayers => team !== null
     )
-    const fixtures = generateFixtures('round-robin', createdTeams)
+    const fixtures = generateFixtures('round-robin', validTeams)
     // 5. Create match objects from fixtures
     const newMatches = fixtures.map((f, i) => ({
       tournament_id: activeTournamentId,
@@ -81,6 +89,13 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
       team_2_id: f.playerB,
       tag: `Match ${i + 1}`,
     }))
+    setActiveTournamentParticipants(
+      validTeams.map((t) => ({
+        tournament_id: activeTournamentId,
+        team_id: t.id,
+        team: t,
+      }))
+    )
     await Promise.all(newMatches.map((match) => addMatch(match)))
     onNext()
   }
@@ -136,7 +151,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         </Button>
         {tournaments[0].match_type === 'doubles' && (
           <Button
-              onClick={handleAutoGenerateTeams}
+            onClick={handleAutoGenerateTeams}
             disabled={availablePlayers.length < 1}
             variant={'secondary'}
           >

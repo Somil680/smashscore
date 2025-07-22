@@ -1,46 +1,25 @@
 'use client'
-// import { useBadmintonStore } from '@/store/useBadmintonStore'
-// import React, { useEffect } from 'react'
-
-// const TeamPage = () => {
-//   const {
-//     teams,
-//     matches,
-//     match_scores,
-//     fetchTeams,
-//     fetchMatch,
-//     fetchMatchScore,
-//   } = useBadmintonStore()
-//   useEffect(() => {
-//     fetchTeams()
-//     fetchMatch()
-//     fetchMatchScore()
-//   }, [])
-//   return <div>team page</div>
-// }
-
-// export default TeamPage
-'use client'
 import TeamCard from '@/components/teams/TeamCard'
 import { calculateTeamStats } from '@/hooks/calculateTeamsStats'
-import { useBadmintonStore } from '@/store/useBadmintonStore'
+import useTeamStore from '@/store/useTeamStore'
+import useTournamentStore from '@/store/useTournamentStore'
 import { Users } from 'lucide-react'
 import { useEffect } from 'react'
 
-const TeamListPage = () =>{
+const TeamListPage = () => {
+  const { teams, fetchTeams } = useTeamStore()
   const {
-    teams,
     matches,
     matchScores,
-    fetchTeams,
-    fetchMatch,
-    fetchMatchScore,
-  } = useBadmintonStore()
+    fetchMatchesForTournament,
+    activeTournamentId,
+  } = useTournamentStore()
   useEffect(() => {
     fetchTeams()
-    fetchMatch()
-    fetchMatchScore()
-  }, [])
+    if (activeTournamentId) {
+      fetchMatchesForTournament(activeTournamentId)
+    }
+  }, [fetchTeams, fetchMatchesForTournament, activeTournamentId])
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
       {/* Header Section */}
@@ -57,7 +36,10 @@ const TeamListPage = () =>{
       </div>
       {teams.map((team) => {
         // Calculate stats for each team before rendering the card
+              console.log('🚀 ~ {teams.map ~ team:', team)
+
         const stats = calculateTeamStats(team.id, matches, matchScores)
+        console.log("🚀 ~ {teams.map ~ stats:", stats)
         return <TeamCard key={team.id} team={team} stats={stats} />
       })}
     </div>

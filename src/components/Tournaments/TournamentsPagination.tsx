@@ -2,11 +2,10 @@
 'use client'
 
 import React from 'react'
-import { useBadmintonStore, PAGE_SIZE } from '@/store/useBadmintonStore' // Adjust path
+import useTournamentStore, { PAGE_SIZE } from '@/store/useTournamentStore' // Adjust path
 import {
   Pagination,
   PaginationContent,
-  
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -15,7 +14,7 @@ import {
 
 export function TournamentPagination() {
   const { currentPage, totalTournaments, fetchTournaments, loading } =
-    useBadmintonStore()
+    useTournamentStore()
 
   const totalPages = Math.ceil(totalTournaments / PAGE_SIZE)
 

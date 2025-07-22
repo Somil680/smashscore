@@ -3,7 +3,7 @@
 
 import React from 'react'
 import { BarChart2, Trophy, Hash, Calendar } from 'lucide-react'
-import { TeamWithPlayers } from '@/lib/type'
+import { TeamWithPlayers } from '@/store/type'
 import Image from 'next/image'
 
 // ============================================================================
@@ -13,7 +13,7 @@ import Image from 'next/image'
 // The props for our TeamCard component.
 // It expects the full team object with player details, plus the calculated stats.
 interface TeamCardProps {
-  team: TeamWithPlayers 
+  team: TeamWithPlayers
   stats: {
     matchesPlayed: number
     totalWins: number
@@ -118,27 +118,3 @@ export default function TeamCard({ team, stats }: TeamCardProps) {
     </div>
   )
 }
-
-// ============================================================================
-// 3. EXAMPLE USAGE IN A PARENT COMPONENT
-// ============================================================================
-
-/*
-import TeamCard from './TeamCard';
-import { useBadmintonStore } from '@/store/useBadmintonStore';
-import { calculateTeamStats } from '@/utils/calculateTeamStats'; // Assuming you have this utility
-
-function TeamListPage() {
-  const { teams, matches, matchScores } = useBadmintonStore();
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-      {teams.map(team => {
-        // Calculate stats for each team before rendering the card
-        const stats = calculateTeamStats(team.id, matches, matchScores);
-        return <TeamCard key={team.id} team={team} stats={stats} />;
-      })}
-    </div>
-  );
-}
-*/

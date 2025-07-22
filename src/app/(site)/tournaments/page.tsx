@@ -1,26 +1,24 @@
 'use client'
 import { TournamentPagination } from '@/components/Tournaments/TournamentsPagination'
 import { getTeamDetails } from '@/hooks/helperFunction'
-import { TournamentWithWinner } from '@/lib/type'
-import { useBadmintonStore } from '@/store/useBadmintonStore'
+import { TournamentWithWinner } from '@/store/type'
+import useTournamentStore from '@/store/useTournamentStore'
 import { Trophy, Calendar, Users, ListChecks, Tickets } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 
 const TournamentPage = () => {
-  const { fetchTournaments, tournaments, loading } = useBadmintonStore()
+  const { fetchTournaments, tournaments, loading } = useTournamentStore()
   console.log('🚀 ~ TournamentPage ~ tournaments:', tournaments)
- const router = useRouter()
+  const router = useRouter()
   useEffect(() => {
     fetchTournaments(0)
-  }, [])
+  }, [fetchTournaments])
 
-  const handleOpenTournamentDetails = (item :TournamentWithWinner) => {
-      router.push(`/tournaments/${item.id}`)
-   }
+  const handleOpenTournamentDetails = (item: TournamentWithWinner) => {
+    router.push(`/tournaments/${item.id}`)
+  }
 
-
-   
   return (
     <div className="p-4 space-y-4">
       <div>
@@ -31,9 +29,9 @@ const TournamentPage = () => {
         <div>loading</div>
       ) : (
         tournaments.map((item) => {
-  const teamName = item.winner_team_id
-    ? getTeamDetails( item.winner_team)
-    : { teamName: 'Winner TBA', playerImages: [], teamId: null }
+          const teamName = item.winner_team_id
+            ? getTeamDetails(item.winner_team)
+            : { teamName: 'Winner TBA', playerImages: [], teamId: null }
           return (
             <div
               key={item.id}
