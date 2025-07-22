@@ -12,7 +12,7 @@ const AVATARS = Array.from(
 export interface AddPlayerModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; image: string }) => void;
+  onSubmit: (data: { id : "" , name: string; image: string }) => void;
 }
 
 export const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ open, onClose, onSubmit }) => {
@@ -41,7 +41,7 @@ export const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ open, onClose, o
     e.preventDefault();
     setTouched(true);
     if (!name.trim()) return;
-    onSubmit({ name: name.trim(), image })
+    onSubmit({ id : "", name: name.trim(), image })
     onClose();
   };
 
