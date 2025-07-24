@@ -10,7 +10,6 @@ const TeamListPage = () => {
   const { teams, fetchTeams } = useTeamStore()
   const {
     matches,
-    matchScores,
     fetchMatchesForTournament,
     activeTournamentId,
   } = useTournamentStore()
@@ -36,9 +35,8 @@ const TeamListPage = () => {
       </div>
       {teams.map((team) => {
         // Calculate stats for each team before rendering the card
-              console.log('🚀 ~ {teams.map ~ team:', team)
 
-        const stats = calculateTeamStats(team.id, matches, matchScores)
+        const stats = calculateTeamStats(team.id, matches)
         console.log("🚀 ~ {teams.map ~ stats:", stats)
         return <TeamCard key={team.id} team={team} stats={stats} />
       })}

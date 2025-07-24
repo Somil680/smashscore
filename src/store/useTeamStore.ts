@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import { TeamWithPlayers, CreateTeamDTO, TeamState, TeamActions } from './type'
-
 // Helper function to get the full team details from Supabase
 const getTeamWithPlayers = async (
   teamId: string
@@ -89,7 +88,10 @@ const useTeamStore = create<TeamState & TeamActions>((set, get) => ({
     }
   },
 
-  getOrCreateTeam: async (player1Id: string, player2Id?: string) => {
+  getOrCreateTeam: async (
+    player1Id: string,
+    player2Id?: string
+  ) => {
     set({ loading: true, error: null })
     try {
       let queryBuilder = supabase.from('teams').select('id')
@@ -114,10 +116,10 @@ const useTeamStore = create<TeamState & TeamActions>((set, get) => ({
 
       if (existingTeam) {
         // If team exists, fetch its full details
-        return await getTeamWithPlayers(existingTeam.id)
+        return await getTeamWithPlayers(existingTeam.id) // ✅ This satisfies the return type
       } else {
         // If team doesn't exist, create it
-        return get().addTeam({
+        return await get().addTeam({
           player_1_id: player1Id,
           player_2_id: player2Id,
         })

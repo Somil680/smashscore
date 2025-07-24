@@ -5,11 +5,19 @@ import StatsCard from '../../components/StatsCard'
 // import FloatingCTA from "../components/FloatingCTA";
 import FloatingCTAWithModal from '@/components/FloatingCTAWithModal'
 import { CreatePlayerDTO } from '@/store/type'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useEffect } from 'react'
 
 export default function Home() {
   const { addPlayer } = usePlayerStore()
-
-
+  const fetchUser = useAuthStore((s) => s.fetchUser)
+  
+  useEffect(() => {
+    fetchUser()
+  }, [])
+  const user = useAuthStore((s) => s.user)
+  console.log("🚀 ~ Home ~ user:", user)
+  
   const handleAddPlayer = async (data: {
     name: string
     image: string

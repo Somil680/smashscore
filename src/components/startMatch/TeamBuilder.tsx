@@ -18,6 +18,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
     tournaments,
     loading,
     setActiveTournamentParticipants,
+    addTeamToTournament
   } = useTournamentStore()
   const { getOrCreateTeam } = useTeamStore()
   const [selected, setSelected] = useState<string[]>([])
@@ -73,7 +74,10 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
   const handleNext = async () => {
     if (!activeTournamentId) return
     const createdTeams = await Promise.all(
-      team.map(([player1, player2]) => {
+      team.map(async([player1, player2]) => {
+        const getTeam = await getOrCreateTeam(player1, player2)
+        if (!getTeam) return null
+         await addTeamToTournament(activeTournamentId, getTeam?.id)
         return getOrCreateTeam(player1, player2)
       })
     )
@@ -147,7 +151,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
             availablePlayers.length === 0
           }
         >
-          Add Team
+          {handleCheckMatchTypeSingle ? 'Select Player' : 'Add Teams'}
         </Button>
         {tournaments[0].match_type === 'doubles' && (
           <Button

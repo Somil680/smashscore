@@ -146,7 +146,7 @@ useEffect(() => {
       // tournament_id: activeTournamentId,
     }))
     finishMatch(match.id, winnerTeamId, scoresToSave)
-
+    // console.log("🚀 ~ handleSaveResult ~ scoresToSave:", scoresToSave)
     // --- THIS IS THE NEW CONNECTIVITY LOGIC ---
     // If the match that just finished was a semi-final...
     if (match.tag === 'Semi-Final') {
@@ -154,7 +154,7 @@ useEffect(() => {
       const finalMatch = matches.find(
         (m) => m.tag === 'Final Match' && m.team_2_id === null
       )
-
+      
       if (finalMatch) {
         // console.log(
         //   `Updating Final Match (${finalMatch.id}) with winner: ${winnerTeamId}`

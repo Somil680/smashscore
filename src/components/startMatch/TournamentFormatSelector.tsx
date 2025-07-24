@@ -10,6 +10,7 @@ import {
 import { Loader2 } from 'lucide-react'
 import { generateTournamentName } from '@/hooks/generateTournamentName'
 import useTournamentStore from '@/store/useTournamentStore'
+import { useAuthStore } from '@/store/useAuthStore'
 
 export type MatchType = 'singles' | 'doubles'
 
@@ -27,6 +28,7 @@ export default function TournamentFormatSelector({
 }: TournamentFormatSelectorProps) {
   const { addTournament, loading, error } = useTournamentStore()
   const newName = generateTournamentName()
+    const user = useAuthStore((s) => s.user)
 
   const [inputData, setInputData] = useState<{
     name: string
@@ -47,6 +49,7 @@ export default function TournamentFormatSelector({
       match_type: inputData.match_type ?? 'singles',
       max_game_set: inputData.max_game_set,
       points_per_game: inputData.points_per_game,
+      user_id: user?.id || '',
     })
     onNext()
   }

@@ -11,7 +11,6 @@ import { Team } from '@/store/type'
 export default function FinalWinnerChecker({
   teamStats,
 }: FinalWinnerCheckerProps) {
-  console.log("🚀 ~ teamStats:", teamStats)
   const { matches, addMatch, activeTournamentId } = useTournamentStore()
 
   useEffect(() => {
@@ -21,21 +20,16 @@ export default function FinalWinnerChecker({
     const groupStageMatches = matches.filter(
       (m) => m.tag !== 'Semi-Final' && m.tag !== 'Final Match'
     )
-    console.log("🚀 ~ useEffect ~ groupStageMatches:", groupStageMatches)
     const allCompleted = groupStageMatches.every((m) => m.winner_team_id)
-    console.log("🚀 ~ useEffect ~ allCompleted:", allCompleted)
 
     // Check if playoffs have already been created
     const playoffsExist = matches.some((m) => m.tag === 'Semi-Final')
-    console.log("🚀 ~ useEffect ~ playoffsExist:", playoffsExist)
     const playoffsFinalExist = matches.some((m) => m.tag === 'Final Match')
-    console.log("🚀 ~ useEffect ~ playoffsFinalExist:", playoffsFinalExist)
 
     if (!allCompleted || playoffsExist || playoffsFinalExist) return
 
     // Generate the fixtures
     const tieMatches = generateTieBreakerFixtures(teamStats, activeTournamentId)
-    console.log("🚀 ~ useEffect ~ tieMatches:", tieMatches)
 
     // Add each new match to the database
     tieMatches.forEach((fixture) => {

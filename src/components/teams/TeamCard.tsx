@@ -17,7 +17,7 @@ interface TeamCardProps {
   stats: {
     matchesPlayed: number
     totalWins: number
-    totalScore: number
+    winProbability: number
   }
 }
 
@@ -108,10 +108,10 @@ export default function TeamCard({ team, stats }: TeamCardProps) {
         <div>
           <div className="flex items-center justify-center gap-2 text-blue-500">
             <Hash size={16} />
-            <span className="text-xs font-medium">Score</span>
+            <span className="text-xs font-medium">WinRate</span>
           </div>
           <p className="text-2xl font-bold text-blue-500 mt-1">
-            {stats.totalScore}
+            {stats.winProbability}%
           </p>
         </div>
       </div>

@@ -1,19 +1,32 @@
 'use client'
 
 import React from 'react'
-import { Card, CardContent } from '@/components/ui/card'
 import Image from 'next/image'
 import { Player } from '@/store/type'
+import { Button } from '../ui/button'
+import { supabase } from '@/lib/supabase'
+import usePlayerStore from '@/store/usePlayerStore'
 
 interface PlayerCardProps {
   player: Player
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
-  console.log('🚀 ~ player:', player)
+  const { fetchPlayers } = usePlayerStore()
+  const handleActiveStatus = async (player: Player) => {
+    const { error } = await supabase
+      .from('players')
+      .update({ active: !player.active })
+      .eq('id', player.id)
+    if (error) throw error
+    if (!error) {
+      fetchPlayers()
+    }
+  }
+
   return (
-    <Card className="w-full max-w-sm rounded-2xl shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
-      <CardContent className="p-6 space-y-4">
+    <div className="w-full  rounded-2xl shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+      <div className="p-4 flex justify-between items-center ">
         {/* Player Image + Name */}
         <div className="flex items-center space-x-4">
           <Image
@@ -33,6 +46,23 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
             </p>
           </div>
         </div>
+        {player.active ? (
+          <Button
+            variant={'default'}
+            className="text-sm"
+            onClick={() => handleActiveStatus(player)}
+          >
+            Active
+          </Button>
+        ) : (
+          <Button
+            variant={'secondary'}
+            className="text-sm"
+            onClick={() => handleActiveStatus(player)}
+          >
+            InActive
+          </Button>
+        )}
 
         {/* Stats */}
         {/* <div className="grid grid-cols-2 gap-4 text-sm">
@@ -60,8 +90,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
             Not synced with server
           </div>
         )} */}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

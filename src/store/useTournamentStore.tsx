@@ -34,7 +34,7 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
     // ACTIONS
     // ============================================================================
 
-    fetchTournaments: async (page = 0) => {
+    fetchTournaments: async (currentUserID ,page = 0) => {
       set({ loading: true, error: null })
       try {
         const from = page * PAGE_SIZE
@@ -52,6 +52,7 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
           `,
             { count: 'exact' }
           )
+          .eq('user_id', currentUserID)
           .order('created_at', { ascending: false })
           .range(from, to)
 
@@ -285,11 +286,19 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
       set({ loading: true, error: null })
       try {
         // Step 1: Update match winner
-        const { error: matchError } = await supabase
+        const { data, error: matchError } = await supabase
           .from('matches')
           .update({ winner_team_id: winnerTeamId })
           .eq('id', matchId)
-
+        console.log(
+          '🚀 ~ finishMatch ~ matchId:',
+          data,
+          matchId,
+          'winnerTeamId:',
+          winnerTeamId,
+          'scores:',
+          scores
+        )
         if (matchError) throw matchError
 
         // Step 2: Insert scores

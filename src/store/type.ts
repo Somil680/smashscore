@@ -3,6 +3,7 @@ export interface Player {
   created_at: string
   name: string
   image_url?: string
+  active ?: boolean // Optional field to indicate if the player is active
 }
 
 // Represents a team. For singles, player_2_id will be null.
@@ -22,6 +23,7 @@ export interface Tournament {
   points_per_game: number
   max_game_set: number
   created_at: string
+  user_id: string // ID of the user who created the tournament
 }
 
 // Junction table type
@@ -123,7 +125,7 @@ export interface TeamActions {
   addTeam: (teamData: CreateTeamDTO) => Promise<TeamWithPlayers | null>
   getOrCreateTeam: (
     player1Id: string,
-    player2Id?: string
+    player2Id?: string,
   ) => Promise<TeamWithPlayers | null>
 }
 
@@ -144,7 +146,7 @@ export interface TournamentState {
 }
 
 export interface TournamentActions {
-  fetchTournaments: (page?: number) => Promise<void>
+  fetchTournaments: ( currentUserID:string ,page?: number ) => Promise<void>
   fetchTournamentDetails: (tournamentId: string) => Promise<void>
   addTournament: (
     tournamentData: CreateTournamentDTO
