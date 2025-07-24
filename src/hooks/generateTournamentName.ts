@@ -49,18 +49,3 @@ export function generateTournamentName(): string {
 
   return nameTemplates[randomIndex]
 }
-
-// --- EXAMPLE USAGE ---
-
-/*
-  import { generateTournamentName } from './utils/generateTournamentName';
-  
-  // In your component, when you open the "Add Tournament" modal,
-  // you can pre-fill the name field with a generated name.
-  
-  const handleOpenAddTournamentModal = () => {
-    const newName = generateTournamentName();
-    // Now you can set this newName as the default value in your form state.
-    console.log(newName); // e.g., "Sunday Badminton Showdown"
-  };
-  */

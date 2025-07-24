@@ -11,10 +11,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination' // Assuming you have shadcn/ui installed
+import { useAuthStore } from '@/store/useAuthStore'
 
 export function TournamentPagination() {
   const { currentPage, totalTournaments, fetchTournaments, loading } =
     useTournamentStore()
+  const user = useAuthStore((s) => s.user)
 
   const totalPages = Math.ceil(totalTournaments / PAGE_SIZE)
 
@@ -26,18 +28,22 @@ export function TournamentPagination() {
 
   const handlePrevious = () => {
     if (currentPage > 0) {
-      fetchTournaments(currentPage - 1)
+      if (!user) return // If user is not logged in, do not fetch tournaments
+      fetchTournaments(user?.id, currentPage - 1)
     }
   }
 
   const handleNext = () => {
     if (currentPage < totalPages - 1) {
-      fetchTournaments(currentPage + 1)
+      if (!user) return // If user is not logged in, do not fetch tournaments
+
+      fetchTournaments(user?.id, currentPage + 1)
     }
   }
 
   const handlePageClick = (pageNumber: number) => {
-    fetchTournaments(pageNumber - 1) // UI is 1-based, store is 0-based
+    if (!user) return // If user is not logged in, do not fetch tournaments
+    fetchTournaments(user?.id, pageNumber - 1) // UI is 1-based, store is 0-based
   }
 
   // Basic logic to render page numbers (can be made more complex)
