@@ -4,7 +4,7 @@ import { Loader2, Sparkles } from 'lucide-react'
 import { Player, TeamWithPlayers } from '@/store/type'
 import { generateFixtures } from '@/lib/FixtureGenerator'
 import Image from 'next/image'
-import useTournamentStore from '@/store/useTournamentStore'
+import useLocalTournamentStore from '@/store/useLocalTournamentStore'
 import useTeamStore from '@/store/useTeamStore'
 interface TeamBuilderProps {
   allPlayers: Player[]
@@ -13,13 +13,13 @@ interface TeamBuilderProps {
 
 export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
   const {
-    activeTournamentId,
-    addMatch,
-    tournaments,
+    currentTournament,
+    addLocalMatch,
+    setLocalTournamentParticipants,
     loading,
-    setActiveTournamentParticipants,
-    addTeamToTournament
-  } = useTournamentStore()
+  } = useLocalTournamentStore()
+
+  
   const { getOrCreateTeam } = useTeamStore()
   const [selected, setSelected] = useState<string[]>([])
   const [team, setTeams] = useState<string[][]>([])
@@ -42,7 +42,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
     (num) => !team.flat().includes(num.id)
   )
   const handleCheckMatchTypeSingle =
-    tournaments[0].match_type === 'singles' ? true : false
+    currentTournament?.match_type === 'singles' ? true : false
 
   const handleAutoGenerateTeams = () => {
     const newTeams: string[][] = []
@@ -72,35 +72,49 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
   }
 
   const handleNext = async () => {
-    if (!activeTournamentId) return
+    if (!currentTournament) return
+
+    // Create teams locally (get or create from database)
     const createdTeams = await Promise.all(
-      team.map(async([player1, player2]) => {
+      team.map(async ([player1, player2]) => {
         const getTeam = await getOrCreateTeam(player1, player2)
-        if (!getTeam) return null
-         await addTeamToTournament(activeTournamentId, getTeam?.id)
-        return getOrCreateTeam(player1, player2)
+        return getTeam
       })
     )
 
     const validTeams = (createdTeams ?? []).filter(
       (team): team is TeamWithPlayers => team !== null
     )
+
+    // Generate fixtures
     const fixtures = generateFixtures('round-robin', validTeams)
-    // 5. Create match objects from fixtures
-    const newMatches = fixtures.map((f, i) => ({
-      tournament_id: activeTournamentId,
-      team_1_id: f.playerA,
-      team_2_id: f.playerB,
-      tag: `Match ${i + 1}`,
-    }))
-    setActiveTournamentParticipants(
+
+    // Set tournament participants in local store
+    setLocalTournamentParticipants(
       validTeams.map((t) => ({
-        tournament_id: activeTournamentId,
+        tournament_id: currentTournament.id,
         team_id: t.id,
         team: t,
       }))
     )
-    await Promise.all(newMatches.map((match) => addMatch(match)))
+
+    // Create local matches
+    fixtures.forEach((f, i) => {
+      const team1 = validTeams.find((t) => t.id === f.playerA)
+      const team2 = validTeams.find((t) => t.id === f.playerB)
+
+      if (team1 && team2) {
+        addLocalMatch({
+          tournament_id: currentTournament.id,
+          team_1_id: f.playerA,
+          team_2_id: f.playerB,
+          team_1: team1,
+          team_2: team2,
+          tag: `Match ${i + 1}`,
+        })
+      }
+    })
+
     onNext()
   }
 
@@ -153,7 +167,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         >
           {handleCheckMatchTypeSingle ? 'Select Player' : 'Add Teams'}
         </Button>
-        {tournaments[0].match_type === 'doubles' && (
+        {currentTournament?.match_type === 'doubles' && (
           <Button
             onClick={handleAutoGenerateTeams}
             disabled={availablePlayers.length < 1}

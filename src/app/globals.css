@@ -16,6 +16,7 @@
   --ring: #60a5fa;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --checkbox-gradient: linear-gradient(to top right, #84cc16, #3b82f6, #6366f1);
 }
 
 body {
@@ -86,6 +87,11 @@ button:hover,
 }
 
 /* Utility classes for glassmorphism and card look */
+.checkbox-gradient {
+  background: var(--checkbox-gradient);
+  border-radius: 4px;
+  padding: 2px;
+}
 .glass {
   background: var(--glass-bg);
   border-radius: 1.5rem;

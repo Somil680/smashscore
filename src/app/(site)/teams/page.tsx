@@ -8,18 +8,23 @@ import { useEffect } from 'react'
 
 const TeamListPage = () => {
   const { teams, fetchTeams } = useTeamStore()
+
   const {
     matches,
-    fetchMatchesForTournament,
-    activeTournamentId,
+    fetchMatches,
   } = useTournamentStore()
+    console.log("🚀 ~ TeamListPage ~ matches:", matches)
+
+
   useEffect(() => {
     fetchTeams()
-    if (activeTournamentId) {
-      fetchMatchesForTournament(activeTournamentId)
-    }
-  }, [fetchTeams, fetchMatchesForTournament, activeTournamentId])
+    fetchMatches()
+  }, [])
+
+
+  
   return (
+  
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
       {/* Header Section */}
       <div className="mb-8 text-center">

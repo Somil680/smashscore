@@ -44,8 +44,9 @@ const useTeamStore = create<TeamState & TeamActions>((set, get) => ({
         *,
         player_1:players!teams_player_1_id_fkey(*),
         player_2:players!teams_player_2_id_fkey(*)
-      `
+        `
       )
+      console.log("🚀 ~ data:", data)
       if (error) throw error
       set({ teams: data || [], loading: false })
     } catch (error: unknown) {

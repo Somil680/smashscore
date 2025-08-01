@@ -12,6 +12,7 @@ import {
   TeamWithPlayers,
 } from './type'
 
+
 export const PAGE_SIZE = 10
 
 const useTournamentStore = create<TournamentState & TournamentActions>(
@@ -34,7 +35,7 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
     // ACTIONS
     // ============================================================================
 
-    fetchTournaments: async (currentUserID ,page = 0) => {
+    fetchTournaments: async (currentUserID, page = 0) => {
       set({ loading: true, error: null })
       try {
         const from = page * PAGE_SIZE
@@ -180,7 +181,32 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
         })
       }
     },
-
+    fetchMatches: async () => {
+       set({ loading: true, error: null })
+       try {
+         const { data, error } = await supabase
+           .from('matches')
+           .select(
+             `
+            *,
+            team_1:teams!matches_team_1_id_fkey(*, player_1:players!teams_player_1_id_fkey(*), player_2:players!teams_player_2_id_fkey(*)),
+            team_2:teams!matches_team_2_id_fkey(*, player_1:players!teams_player_1_id_fkey(*), player_2:players!teams_player_2_id_fkey(*))
+          `
+           )
+           .order('created_at', { ascending: true })
+         if (error) throw error
+         set({
+           matches: (data as MatchWithDetails[]) || [],
+           loading: false,
+         })
+       } catch (error: unknown) {
+         set({
+           error: error instanceof Error ? error.message : String(error),
+           loading: false,
+         })
+       }
+    }
+,
     fetchMatchesForTournament: async (tournamentId: string) => {
       set({ loading: true, error: null })
       try {
@@ -335,6 +361,176 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
       }[]
     ) => {
       set({ activeTournamentParticipants: active })
+    },
+
+    saveBatchTournamentToSupabase: async (localTournamentData) => {
+      set({ loading: true, error: null })
+
+      try {
+        const { tournament, participants, matches, scores } =
+          localTournamentData
+
+        // Step 1: Create the tournament
+        const { data: createdTournament, error: tournamentError } =
+          await supabase
+            .from('tournaments')
+            .insert([
+              {
+                name: tournament.name,
+                tournament_type: tournament.tournament_type,
+                match_type: tournament.match_type,
+                winner_team_id: tournament.winner_team_id,
+                points_per_game: tournament.points_per_game,
+                max_game_set: tournament.max_game_set,
+                user_id: tournament.user_id,
+              },
+            ])
+            .select()
+            .single()
+
+        if (tournamentError) throw tournamentError
+        if (!createdTournament) throw new Error('Failed to create tournament')
+
+        const realTournamentId = createdTournament.id
+
+        // Step 2: Create teams if they don't exist and add tournament participants
+        const teamIdMapping: { [localTeamId: string]: string } = {}
+
+        for (const participant of participants) {
+          const team = participant.team
+
+          // Check if team already exists in database
+          let realTeamId = team.id
+
+          // If team has local ID (starts with uuid pattern), create it in database
+          if (team.id.includes('-')) {
+            const { data: existingTeam, error: findError } = await supabase
+              .from('teams')
+              .select('id')
+              .eq('player_1_id', team.player_1_id)
+              .eq('player_2_id', team.player_2_id || null)
+              .single()
+
+            if (findError && findError.code !== 'PGRST116') throw findError
+
+            if (existingTeam) {
+              realTeamId = existingTeam.id
+            } else {
+              // Create new team
+              const { data: newTeam, error: teamError } = await supabase
+                .from('teams')
+                .insert([
+                  {
+                    player_1_id: team.player_1_id,
+                    player_2_id: team.player_2_id,
+                  },
+                ])
+                .select()
+                .single()
+
+              if (teamError) throw teamError
+              if (!newTeam) throw new Error('Failed to create team')
+
+              realTeamId = newTeam.id
+            }
+          }
+
+          teamIdMapping[team.id] = realTeamId
+
+          // Add team to tournament
+          const { error: participantError } = await supabase
+            .from('tournament_participants')
+            .insert([
+              {
+                tournament_id: realTournamentId,
+                team_id: realTeamId,
+              },
+            ])
+
+          if (participantError) throw participantError
+        }
+
+        // Step 3: Create matches with correct team IDs
+        const matchIdMapping: { [localMatchId: string]: string } = {}
+
+        for (const match of matches) {
+          const realTeam1Id = teamIdMapping[match.team_1_id] || match.team_1_id
+          const realTeam2Id = match.team_2_id
+            ? teamIdMapping[match.team_2_id] || match.team_2_id
+            : null
+          const realWinnerTeamId = match.winner_team_id
+            ? teamIdMapping[match.winner_team_id] || match.winner_team_id
+            : null
+
+          const { data: createdMatch, error: matchError } = await supabase
+            .from('matches')
+            .insert([
+              {
+                tournament_id: realTournamentId,
+                team_1_id: realTeam1Id,
+                team_2_id: realTeam2Id,
+                winner_team_id: realWinnerTeamId,
+                tag: match.tag,
+              },
+            ])
+            .select()
+            .single()
+
+          if (matchError) throw matchError
+          if (!createdMatch) throw new Error('Failed to create match')
+
+          matchIdMapping[match.id] = createdMatch.id
+        }
+
+        // Step 4: Create match scores with correct match IDs
+        const scoresToInsert = scores.map((score) => ({
+          match_id: matchIdMapping[score.match_id],
+          game_number: score.game_number,
+          team_1_score: score.team_1_score,
+          team_2_score: score.team_2_score,
+        }))
+
+        if (scoresToInsert.length > 0) {
+          const { error: scoresError } = await supabase
+            .from('match_scores')
+            .insert(scoresToInsert)
+
+          if (scoresError) throw scoresError
+        }
+
+        // Step 5: Update tournament with winner if exists
+        if (tournament.winner_team_id) {
+          const realWinnerTeamId =
+            teamIdMapping[tournament.winner_team_id] ||
+            tournament.winner_team_id
+
+          const { error: winnerError } = await supabase
+            .from('tournaments')
+            .update({ winner_team_id: realWinnerTeamId })
+            .eq('id', realTournamentId)
+
+          if (winnerError) throw winnerError
+        }
+
+        set({ loading: false })
+
+        return {
+          success: true,
+          tournamentId: realTournamentId,
+        }
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        set({
+          error: errorMessage,
+          loading: false,
+        })
+
+        return {
+          success: false,
+          error: errorMessage,
+        }
+      }
     },
   })
 )

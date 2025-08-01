@@ -9,8 +9,9 @@ import {
 } from '../ui/select'
 import { Loader2 } from 'lucide-react'
 import { generateTournamentName } from '@/hooks/generateTournamentName'
-import useTournamentStore from '@/store/useTournamentStore'
+import useLocalTournamentStore from '@/store/useLocalTournamentStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { Checkbox } from '../ui/checkbox'
 
 export type MatchType = 'singles' | 'doubles'
 
@@ -26,29 +27,32 @@ const MATCH_TYPES = [
 export default function TournamentFormatSelector({
   onNext,
 }: TournamentFormatSelectorProps) {
-  const { addTournament, loading, error } = useTournamentStore()
+  const { createLocalTournament, loading, error } = useLocalTournamentStore()
   const newName = generateTournamentName()
-    const user = useAuthStore((s) => s.user)
+  const user = useAuthStore((s) => s.user)
 
   const [inputData, setInputData] = useState<{
     name: string
     match_type: MatchType | null
     max_game_set: number
     points_per_game: number
+    final_match: boolean
   }>({
     name: newName,
     match_type: 'singles',
     max_game_set: 1,
     points_per_game: 21,
+    final_match: true,
   })
 
-  const handleNext = async () => {
-    await addTournament({
+  const handleNext = () => {
+    createLocalTournament({
       name: inputData.name,
       tournament_type: 'round-robin',
       match_type: inputData.match_type ?? 'singles',
       max_game_set: inputData.max_game_set,
       points_per_game: inputData.points_per_game,
+      final_match: inputData.final_match,
       user_id: user?.id || '',
     })
     onNext()
@@ -90,7 +94,6 @@ export default function TournamentFormatSelector({
                     match_type: m.type as MatchType,
                   }))
                 }
-                // onClick={() => setLocalMatchType(m.type as MatchType)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.97 }}
                 className={`flex-1 flex items-center justify-center w-[80px] rounded-xl shadow px-2 py-2 bg-gradient-to-tr ${
@@ -151,6 +154,38 @@ export default function TournamentFormatSelector({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-center justify-between w-full gap-4">
+              <p>Final Match</p>
+              <div className="flex items-center">
+                  <Checkbox
+                    className='size-4'
+                  id="final_match"
+                  checked={inputData.final_match}
+                  onCheckedChange={(checked) =>
+                    setInputData((prev) => ({
+                      ...prev,
+                      final_match: checked === true,
+                    }))
+                  }
+                />
+
+                {/* <input
+                  type="checkbox"
+                  id="final_match"
+                  checked={inputData.final_match}
+                  onChange={(e) =>
+                    setInputData((prev) => ({
+                      ...prev,
+                      final_match: e.target.checked,
+                    }))
+                  }
+                  className="w-4 h-4 text-lime-400 bg-black/40 border-gray-700 rounded focus:ring-lime-400 focus:ring-2"
+                /> */}
+                {/* <label htmlFor="final_match" className="ml-2 text-sm text-gray-200">
+                  Generate final match between top 2 teams
+                </label> */}
+              </div>
             </div>
           </div>
           <button

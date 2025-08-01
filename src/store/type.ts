@@ -3,7 +3,7 @@ export interface Player {
   created_at: string
   name: string
   image_url?: string
-  active ?: boolean // Optional field to indicate if the player is active
+  active?: boolean // Optional field to indicate if the player is active
 }
 
 // Represents a team. For singles, player_2_id will be null.
@@ -22,6 +22,7 @@ export interface Tournament {
   winner_team_id?: string
   points_per_game: number
   max_game_set: number
+  final_match?: boolean // Optional field for local tournaments to determine if final match should be generated
   created_at: string
   user_id: string // ID of the user who created the tournament
 }
@@ -125,7 +126,7 @@ export interface TeamActions {
   addTeam: (teamData: CreateTeamDTO) => Promise<TeamWithPlayers | null>
   getOrCreateTeam: (
     player1Id: string,
-    player2Id?: string,
+    player2Id?: string
   ) => Promise<TeamWithPlayers | null>
 }
 
@@ -146,7 +147,7 @@ export interface TournamentState {
 }
 
 export interface TournamentActions {
-  fetchTournaments: ( currentUserID:string ,page?: number ) => Promise<void>
+  fetchTournaments: (currentUserID: string, page?: number) => Promise<void>
   fetchTournamentDetails: (tournamentId: string) => Promise<void>
   addTournament: (
     tournamentData: CreateTournamentDTO
@@ -157,6 +158,7 @@ export interface TournamentActions {
     winnerTeamId: string
   ) => Promise<void>
   fetchMatchesForTournament: (tournamentId: string) => Promise<void>
+  fetchMatches: () => Promise<void>
   addMatch: (matchData: CreateMatchDTO) => Promise<MatchWithDetails | null>
   updateMatch: (
     matchId: string,
@@ -170,4 +172,42 @@ export interface TournamentActions {
   setActiveTournamentParticipants: (
     active: { tournament_id: string; team_id: string; team: TeamWithPlayers }[]
   ) => Promise<void>
+
+  // Batch save functionality for local tournaments
+  saveBatchTournamentToSupabase: (localTournamentData: {
+    tournament: {
+      id: string
+      name: string
+      tournament_type: 'league' | 'knockout' | 'round-robin'
+      match_type: 'singles' | 'doubles'
+      winner_team_id?: string
+      points_per_game: number
+      max_game_set: number
+      user_id: string
+      created_at: string
+      isLocal: true
+    }
+    participants: (TournamentParticipant & { team: TeamWithPlayers })[]
+    matches: {
+      id: string
+      tournament_id: string
+      team_1_id: string
+      team_2_id: string | null
+      winner_team_id?: string
+      tag?: string
+      match_date: string
+      created_at: string
+      team_1: TeamWithPlayers
+      team_2: TeamWithPlayers | null
+      isLocal: true
+    }[]
+    scores: {
+      id: string
+      match_id: string
+      game_number: number
+      team_1_score: number
+      team_2_score: number
+      isLocal: true
+    }[]
+  }) => Promise<{ success: boolean; tournamentId?: string; error?: string }>
 }
