@@ -46,7 +46,7 @@ const useTeamStore = create<TeamState & TeamActions>((set, get) => ({
         player_2:players!teams_player_2_id_fkey(*)
         `
       )
-      console.log("🚀 ~ data:", data)
+      console.log('🚀 ~ data:', data)
       if (error) throw error
       set({ teams: data || [], loading: false })
     } catch (error: unknown) {
@@ -89,10 +89,7 @@ const useTeamStore = create<TeamState & TeamActions>((set, get) => ({
     }
   },
 
-  getOrCreateTeam: async (
-    player1Id: string,
-    player2Id?: string
-  ) => {
+  getOrCreateTeam: async (player1Id: string, player2Id?: string) => {
     set({ loading: true, error: null })
     try {
       let queryBuilder = supabase.from('teams').select('id')
@@ -104,16 +101,16 @@ const useTeamStore = create<TeamState & TeamActions>((set, get) => ({
         queryBuilder = queryBuilder.or(`${filter1},${filter2}`)
       } else {
         // Singles team: check for player1 and ensure player2 is null
-        queryBuilder = queryBuilder
-          .eq('player_1_id', player1Id)
-          .is('player_2_id', null)
+        // Use PostgREST filter syntax: and(player_1_id.eq.UUID,player_2_id.is.null)
+        const singlesFilter = `and(player_1_id.eq.${player1Id},player_2_id.is.null)`
+        queryBuilder = queryBuilder.or(singlesFilter)
       }
 
       const { data: existingTeam, error: findError } = await queryBuilder
         .limit(1)
-        .single()
+        .maybeSingle() // Use maybeSingle() instead of single() to handle no results gracefully
 
-      if (findError && findError.code !== 'PGRST116') throw findError // Handle actual errors
+      if (findError) throw findError // Handle actual errors
 
       if (existingTeam) {
         // If team exists, fetch its full details

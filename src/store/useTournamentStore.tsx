@@ -12,7 +12,6 @@ import {
   TeamWithPlayers,
 } from './type'
 
-
 export const PAGE_SIZE = 10
 
 const useTournamentStore = create<TournamentState & TournamentActions>(
@@ -53,7 +52,7 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
           `,
             { count: 'exact' }
           )
-          .eq('user_id', currentUserID)
+          // .eq('user_id', currentUserID)
           .order('created_at', { ascending: false })
           .range(from, to)
 
@@ -182,31 +181,30 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
       }
     },
     fetchMatches: async () => {
-       set({ loading: true, error: null })
-       try {
-         const { data, error } = await supabase
-           .from('matches')
-           .select(
-             `
+      set({ loading: true, error: null })
+      try {
+        const { data, error } = await supabase
+          .from('matches')
+          .select(
+            `
             *,
             team_1:teams!matches_team_1_id_fkey(*, player_1:players!teams_player_1_id_fkey(*), player_2:players!teams_player_2_id_fkey(*)),
             team_2:teams!matches_team_2_id_fkey(*, player_1:players!teams_player_1_id_fkey(*), player_2:players!teams_player_2_id_fkey(*))
           `
-           )
-           .order('created_at', { ascending: true })
-         if (error) throw error
-         set({
-           matches: (data as MatchWithDetails[]) || [],
-           loading: false,
-         })
-       } catch (error: unknown) {
-         set({
-           error: error instanceof Error ? error.message : String(error),
-           loading: false,
-         })
-       }
-    }
-,
+          )
+          .order('created_at', { ascending: true })
+        if (error) throw error
+        set({
+          matches: (data as MatchWithDetails[]) || [],
+          loading: false,
+        })
+      } catch (error: unknown) {
+        set({
+          error: error instanceof Error ? error.message : String(error),
+          loading: false,
+        })
+      }
+    },
     fetchMatchesForTournament: async (tournamentId: string) => {
       set({ loading: true, error: null })
       try {
@@ -398,42 +396,58 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
 
         for (const participant of participants) {
           const team = participant.team
+          console.log('🚀 ~ team:', team)
 
           // Check if team already exists in database
           let realTeamId = team.id
 
           // If team has local ID (starts with uuid pattern), create it in database
-          if (team.id.includes('-')) {
-            const { data: existingTeam, error: findError } = await supabase
+          // if (team.id.includes('-')) {
+          let query = supabase
+            .from('teams')
+            .select('id')
+            .eq('player_1_id', team.player_1_id)
+
+          // Check if player_2_id is null or has a value
+          if (team.player_2_id === null) {
+            query = query.is('player_2_id', null)
+          } else {
+            query = query.eq('player_2_id', team.player_2_id)
+          }
+
+          const { data: existingTeam, error: findError } =
+            await query.maybeSingle()
+          // const { data: existingTeam, error: findError } = await supabase
+          //   .from('teams')
+          //   .select('id')
+          //   .eq('player_1_id', team.player_1_id)
+          //   .eq('player_2_id', team.player_2_id)
+          //   .single()
+          console.log('🚀 ~ existingTeam:', existingTeam)
+
+          if (findError && findError.code !== 'PGRST116') throw findError
+
+          if (existingTeam) {
+            realTeamId = existingTeam.id
+          } else {
+            // Create new team
+            const { data: newTeam, error: teamError } = await supabase
               .from('teams')
-              .select('id')
-              .eq('player_1_id', team.player_1_id)
-              .eq('player_2_id', team.player_2_id || null)
+              .insert([
+                {
+                  player_1_id: team.player_1_id,
+                  player_2_id: team.player_2_id,
+                },
+              ])
+              .select()
               .single()
 
-            if (findError && findError.code !== 'PGRST116') throw findError
+            if (teamError) throw teamError
+            if (!newTeam) throw new Error('Failed to create team')
 
-            if (existingTeam) {
-              realTeamId = existingTeam.id
-            } else {
-              // Create new team
-              const { data: newTeam, error: teamError } = await supabase
-                .from('teams')
-                .insert([
-                  {
-                    player_1_id: team.player_1_id,
-                    player_2_id: team.player_2_id,
-                  },
-                ])
-                .select()
-                .single()
-
-              if (teamError) throw teamError
-              if (!newTeam) throw new Error('Failed to create team')
-
-              realTeamId = newTeam.id
-            }
+            realTeamId = newTeam.id
           }
+          // }
 
           teamIdMapping[team.id] = realTeamId
 

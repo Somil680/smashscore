@@ -11,13 +11,13 @@ import { useEffect } from 'react'
 export default function Home() {
   const { addPlayer } = usePlayerStore()
   const fetchUser = useAuthStore((s) => s.fetchUser)
-  
+
   useEffect(() => {
     fetchUser()
-  }, [])
+  }, [fetchUser])
   const user = useAuthStore((s) => s.user)
-  console.log("🚀 ~ Home ~ user:", user)
-  
+  console.log('🚀 ~ Home ~ user:', user)
+
   const handleAddPlayer = async (data: {
     name: string
     image: string
@@ -79,7 +79,7 @@ export default function Home() {
           linkColor="text-blue-500"
         />
       </main>
-      <FloatingCTAWithModal onSubmit={handleAddPlayer} />{' '}
+      {user && <FloatingCTAWithModal onSubmit={handleAddPlayer} />}
     </div>
   )
 }

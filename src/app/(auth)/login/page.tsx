@@ -6,11 +6,12 @@ import { LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/useAuthStore'
-import Link from 'next/link'
+// import Link from 'next/link'
 
 export default function LoginPage() {
-  const user = useAuthStore((s) => s.user)
-  console.log("🚀 ~ LoginPage ~ user:", user)
+  const user = useAuthStore((s) => {
+    return s.user;
+  })
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const router = useRouter()
@@ -97,12 +98,12 @@ export default function LoginPage() {
               <LogIn className="h-10 w-10 text-blue-100" />{' '}
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>
-            <p>
+            {/* <p>
               dont have an account -{' '}
               <Link className="underline" href={'signUp'}>
                 Create Account
               </Link>
-            </p>
+            </p> */}
           </div>
         </form>
       </div>

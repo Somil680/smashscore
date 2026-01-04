@@ -42,7 +42,7 @@ export default function TournamentFormatSelector({
     match_type: 'singles',
     max_game_set: 1,
     points_per_game: 21,
-    final_match: true,
+    final_match: false,
   })
 
   const handleNext = () => {

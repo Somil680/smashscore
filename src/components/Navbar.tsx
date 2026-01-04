@@ -73,7 +73,7 @@ export default function Navbar() {
           Tournaments
         </Link>
         <Link
-          href="/analysis"
+          href="/teams"
           className="hover:text-lime-500 transition-colors duration-300"
         >
           Analysis
