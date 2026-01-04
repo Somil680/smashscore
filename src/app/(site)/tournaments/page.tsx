@@ -17,18 +17,15 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 
 const TournamentPage = () => {
-    const user = useAuthStore((s) => s.user)
-  
+  const user = useAuthStore((s) => s.user)
+
   const { fetchTournaments, tournaments, loading } = useTournamentStore()
   console.log('🚀 ~ TournamentPage ~ tournaments:', tournaments)
   const router = useRouter()
   useEffect(() => {
-    if (!user) {
-      router.push('/')
-      return
-    }
-    fetchTournaments(user?.id , 0)
-  }, [user])
+    // Fetch all tournaments if no user, or user's tournaments if logged in
+    fetchTournaments(user?.id || null, 0)
+  }, [user, fetchTournaments])
 
   const handleOpenTournamentDetails = (item: TournamentWithWinner) => {
     router.push(`/tournaments/${item.id}`)

@@ -147,7 +147,7 @@ export interface TournamentState {
 }
 
 export interface TournamentActions {
-  fetchTournaments: (currentUserID: string, page?: number) => Promise<void>
+  fetchTournaments: (currentUserID: string | null | undefined, page?: number) => Promise<void>
   fetchTournamentDetails: (tournamentId: string) => Promise<void>
   addTournament: (
     tournamentData: CreateTournamentDTO

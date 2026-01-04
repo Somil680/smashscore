@@ -39,10 +39,8 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
       try {
         const from = page * PAGE_SIZE
         const to = from + PAGE_SIZE - 1
-        const { data, error, count } = await supabase
-          .from('tournaments')
-          .select(
-            `
+        let query = supabase.from('tournaments').select(
+          `
             *,
             winner_team:teams!tournaments_winner_team_id_fkey2 (
               *,
@@ -50,9 +48,15 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
               player_2:players!teams_player_2_id_fkey(*)
             )
           `,
-            { count: 'exact' }
-          )
-          // .eq('user_id', currentUserID)
+          { count: 'exact' }
+        )
+
+        // Only filter by user_id if a user ID is provided
+        if (currentUserID) {
+          query = query.eq('user_id', currentUserID)
+        }
+
+        const { data, error, count } = await query
           .order('created_at', { ascending: false })
           .range(from, to)
 
