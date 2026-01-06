@@ -9,7 +9,11 @@ export default function FloatingCTA({ onClick }: FloatingCTAProps) {
     <button
       type="button"
       onClick={onClick}
-      className="fixed bottom-6 right-6 z-30 bg-gradient-to-tr from-lime-400 to-blue-500 text-white rounded-full shadow-xl px-6 py-3 font-semibold text-lg hover:scale-105 transition-transform flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+      className="fixed bottom-6 right-6 z-30 text-slate-950 font-bold font-mono text-lg uppercase tracking-wider px-6 py-3 hover:scale-105 transition-all duration-300 flex items-center gap-2 focus:outline-none shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_50px_rgba(6,182,212,0.6)]"
+      style={{
+        background: 'linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6)',
+        clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)',
+      }}
       aria-label="Add Player"
     >
       <svg

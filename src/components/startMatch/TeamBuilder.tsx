@@ -1,11 +1,15 @@
+'use client'
+
 import React, { useState } from 'react'
 import { Button } from '../ui/button'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Loader2, Sparkles, Users, User } from 'lucide-react'
 import { Player, TeamWithPlayers } from '@/store/type'
 import { generateFixtures } from '@/lib/FixtureGenerator'
 import Image from 'next/image'
 import useLocalTournamentStore from '@/store/useLocalTournamentStore'
 import useTeamStore from '@/store/useTeamStore'
+import { motion } from 'framer-motion'
+
 interface TeamBuilderProps {
   allPlayers: Player[]
   onNext: () => void
@@ -19,7 +23,6 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
     loading,
   } = useLocalTournamentStore()
 
-  
   const { getOrCreateTeam } = useTeamStore()
   const [selected, setSelected] = useState<string[]>([])
   const [team, setTeams] = useState<string[][]>([])
@@ -46,12 +49,9 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
 
   const handleAutoGenerateTeams = () => {
     const newTeams: string[][] = []
-
-    // Get shuffled player IDs
     let ids = [...availablePlayers.map((p) => p.id)]
     ids = ids.sort(() => Math.random() - 0.5)
 
-    // Form teams of 2
     while (ids.length >= 2) {
       const p1 = ids[0]
       const p2 = ids[1]
@@ -59,22 +59,17 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
       ids = ids.slice(2)
     }
 
-    // If one player is left, make a single-player team
     if (ids.length === 1) {
       newTeams.push([ids[0]])
     }
 
-    // Add to existing teams
     setTeams((prev) => [...prev, ...newTeams])
-
-    // Clear selected
     setSelected([])
   }
 
   const handleNext = async () => {
     if (!currentTournament) return
 
-    // Create teams locally (get or create from database)
     const createdTeams = await Promise.all(
       team.map(async ([player1, player2]) => {
         const getTeam = await getOrCreateTeam(player1, player2)
@@ -86,10 +81,8 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
       (team): team is TeamWithPlayers => team !== null
     )
 
-    // Generate fixtures
     const fixtures = generateFixtures('round-robin', validTeams)
 
-    // Set tournament participants in local store
     setLocalTournamentParticipants(
       validTeams.map((t) => ({
         tournament_id: currentTournament.id,
@@ -98,7 +91,6 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
       }))
     )
 
-    // Create local matches
     fixtures.forEach((f, i) => {
       const team1 = validTeams.find((t) => t.id === f.playerA)
       const team2 = validTeams.find((t) => t.id === f.playerB)
@@ -119,110 +111,182 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
   }
 
   return (
-    <div className="flex flex-col  gap-4 ">
-      <h2 className="text-lg font-semibold text-white mb-2">
-        {handleCheckMatchTypeSingle ? 'Select Single Player' : 'Create Teams'}
-      </h2>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-2xl">
-        {availablePlayers.map((player) => (
-          <button
-            key={player.id}
-            type="button"
-            onClick={() => handleSelect(player.id)}
-            className={`group flex flex-col items-center gap-2 rounded-2xl p-3 border-2 transition-all duration-300 shadow-xl bg-gradient-to-br from-[#181f2a] to-[#232c3b] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 relative overflow-hidden
-         ${
-           selected.includes(player.id)
-             ? '  from-lime-400 via-blue-500 to-purple-500  border-lime-300'
-             : 'border-blue-400 hover:border-blue-400  '
-         }
-       `}
-            disabled={team.flatMap((t) => t).includes(player.id)}
-          >
-            <span className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-gradient-to-tr from-lime-400 to-blue-500 transition-all duration-300 rounded-2xl z-0" />
-            <Image
-              src={player.image_url || '/avatars/avatar1.gif'}
-              alt={player.name}
-              width={56}
-              height={56}
-              className="rounded-full w-14 h-14 object-cover border-2 border-blue-200 group-hover:border-lime-400 transition-all duration-300 z-10"
-            />
-            <span className="font-medium text-base text-white mt-1 z-10 group-hover:text-lime-300 transition-colors duration-300">
-              {player.name}
-            </span>
-          </button>
-        ))}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col gap-6 max-w-4xl"
+    >
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div
+          className="p-2"
+          style={{
+            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+            clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+            border: '1px solid rgba(6, 182, 212, 0.3)',
+          }}
+        >
+          {handleCheckMatchTypeSingle ? (
+            <User className="w-6 h-6 text-cyan-400" />
+          ) : (
+            <Users className="w-6 h-6 text-cyan-400" />
+          )}
+        </div>
+        <h2 className="text-xl font-bold font-mono uppercase tracking-wider text-white">
+          {handleCheckMatchTypeSingle ? 'Select Players' : 'Build Teams'}
+        </h2>
       </div>
-      <div className="flex justify-between gap-2">
+
+      {/* Players Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full">
+        {availablePlayers.map((player) => {
+          const isSelected = selected.includes(player.id)
+          return (
+            <motion.button
+              key={player.id}
+              type="button"
+              onClick={() => handleSelect(player.id)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`group flex flex-col items-center gap-3 p-4 transition-all duration-300 relative overflow-hidden ${
+                isSelected
+                  ? 'border-cyan-400'
+                  : 'border-slate-700/50 hover:border-slate-600'
+              }`}
+              style={{
+                background: isSelected
+                  ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))'
+                  : 'rgba(15, 23, 42, 0.6)',
+                border: `1px solid ${isSelected ? 'rgba(6, 182, 212, 0.5)' : 'rgba(51, 65, 85, 0.5)'}`,
+                clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+                boxShadow: isSelected ? '0 0 20px rgba(6, 182, 212, 0.3)' : 'none',
+              }}
+              disabled={team.flatMap((t) => t).includes(player.id)}
+            >
+              {/* Corner accent */}
+              <div 
+                className="absolute top-0 right-0 w-3 h-3 pointer-events-none"
+                style={{ 
+                  background: isSelected 
+                    ? 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)' 
+                    : 'linear-gradient(135deg, transparent 50%, #475569 50%)' 
+                }}
+              />
+              
+              <div
+                className="relative"
+                style={{
+                  padding: '2px',
+                  background: isSelected
+                    ? 'linear-gradient(135deg, #06b6d4, #8b5cf6)'
+                    : 'linear-gradient(135deg, #475569, #64748b)',
+                  clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                }}
+              >
+                <Image
+                  src={player.image_url || '/profileImage/i1.png'}
+                  alt={player.name}
+                  width={56}
+                  height={56}
+                  className="object-cover bg-slate-800"
+                  style={{
+                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
+                  }}
+                />
+              </div>
+              <span className={`font-mono text-sm uppercase tracking-wider ${
+                isSelected ? 'text-cyan-400' : 'text-slate-300'
+              }`}>
+                {player.name}
+              </span>
+            </motion.button>
+          )
+        })}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4">
         <Button
           className="flex-1"
           onClick={handleAddTeam}
           disabled={
-            (handleCheckMatchTypeSingle
-              ? selected.length !== 1 // For single, only 1 player allowed
-              : selected.length < 1 || selected.length > 2) || // For duo, allow 1 or 2
+            (handleCheckMatchTypeSingle ? selected.length !== 1
+              : selected.length < 1 || selected.length > 2) ||
             selected.length === 0 ||
             availablePlayers.length === 0
           }
         >
-          {handleCheckMatchTypeSingle ? 'Select Player' : 'Add Teams'}
+          {handleCheckMatchTypeSingle ? 'Select Player' : 'Add Team'}
         </Button>
         {currentTournament?.match_type === 'doubles' && (
           <Button
             onClick={handleAutoGenerateTeams}
             disabled={availablePlayers.length < 1}
-            variant={'secondary'}
+            variant="secondary"
           >
-            <Sparkles size={20} />
-            Auto
+            <Sparkles size={18} />
+            Auto Generate
           </Button>
         )}
       </div>
-      <div className="w-full mt-6">
-        <h3 className="text-lg font-semibold text-white mb-2">Teams</h3>
-        <div className="flex flex-wrap gap-4">
-          {team.map((team, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 bg-[#232c3b] rounded-xl px-4 py-2"
-            >
-              {team.map((pid) => {
-                const p = allPlayers.find((pl) => pl.id === pid)
-                return (
-                  <span
-                    key={pid}
-                    className="flex items-center gap-1 text-white font-medium"
-                  >
-                    <Image
-                      src={p?.image_url ?? ''}
-                      alt={p?.name || 'Player'}
-                      width={24}
-                      height={24}
-                      className="rounded-full"
-                    />
-                    {p?.name}
-                  </span>
-                )
-              })}
-              <button
-                className="ml-2 text-xs text-red-400 hover:text-red-600"
-                onClick={() => handleRemoveTeam(index)}
-                type="button"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
 
+      {/* Created Teams */}
+      {team.length > 0 && (
+        <div className="w-full">
+          <h3 className="text-sm font-mono uppercase tracking-wider text-cyan-400 mb-4">
+            [ {team.length} Teams Created ]
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            {team.map((t, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-900/60 border border-slate-700/50"
+                style={{
+                  clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                }}
+              >
+                {t.map((pid) => {
+                  const p = allPlayers.find((pl) => pl.id === pid)
+                  return (
+                    <span
+                      key={pid}
+                      className="flex items-center gap-2 text-white font-mono text-sm"
+                    >
+                      <Image
+                        src={p?.image_url ?? '/profileImage/i1.png'}
+                        alt={p?.name || 'Player'}
+                        width={24}
+                        height={24}
+                        className="rounded-full"
+                      />
+                      {p?.name}
+                    </span>
+                  )
+                })}
+                <button
+                  className="ml-2 text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider"
+                  onClick={() => handleRemoveTeam(index)}
+                  type="button"
+                >
+                  ✕
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Next Button */}
       <Button
         type="button"
         onClick={handleNext}
         disabled={team.length === 0 || loading}
+        className="mt-4"
       >
-        {loading ? <Loader2 size={25} className=" animate-spin" /> : 'Next'}
+        {loading ? <Loader2 size={24} className="animate-spin" /> : 'Generate Fixtures →'}
       </Button>
-    </div>
+    </motion.div>
   )
 }

@@ -9,134 +9,168 @@ import {
   ListChecks,
   Swords,
   Award,
-  Tickets,
+  Zap,
   Crown,
+  Target,
 } from 'lucide-react'
 import {
   TeamWithPlayers,
   MatchWithScoresAndDetails,
   TournamentWithDetails,
 } from '@/store/type'
-// import {
-//   TournamentWithDetails,
-//   MatchWithScoresAndDetails,
-//   TeamWithPlayers,
-// } from '@/' // Adjust path as needed
+import { motion } from 'framer-motion'
 
 // ============================================================================
 // 1. HELPER FUNCTIONS & COMPONENTS
 // ============================================================================
 
-/**
- * A small component to display the details of one team in a match.
- */
 const TeamDisplay = ({
   team,
-  className,
+  isWinner = false,
 }: {
   team: TeamWithPlayers | null
-  className: string
+  className?: string
+  isWinner?: boolean
 }) => {
   if (!team) {
-    return <div className="text-gray-500">TBA</div>
+    return <div className="text-slate-500 font-mono text-sm">TBA</div>
   }
   const teamName = team.player_2
     ? `${team.player_1.name} & ${team.player_2.name}`
     : team.player_1.name
 
   return (
-    <div className="flex flex-col items-center text-center">
-      {/* <div className="flex -space-x-2">
-        {team.player_1 && (
-          <img
-            src={
-              team.player_1.image_url ||
-              `https://placehold.co/40x40/E2E8F0/4A5568?text=${team.player_1.name.charAt(
-                0
-              )}`
-            }
-            alt={team.player_1.name}
-            className="w-8 h-8 rounded-full border-2 border-white"
-          />
-        )}
-        {team.player_2 && (
-          <img
-            src={
-              team.player_2.image_url ||
-              `https://placehold.co/40x40/E2E8F0/4A5568?text=${team.player_2.name.charAt(
-                0
-              )}`
-            }
-            alt={team.player_2.name}
-            className="w-8 h-8 rounded-full border-2 border-white"
-          />
-        )}
-      </div> */}
-      <span className={className}>{teamName}</span>
+    <div
+      className={`px-4 py-2 font-mono font-bold text-sm uppercase tracking-wider text-center transition-all ${
+        isWinner ? 'text-yellow-400' : 'text-white'
+      }`}
+      style={{
+        background: isWinner
+          ? 'linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(245, 158, 11, 0.1))'
+          : 'rgba(15, 23, 42, 0.4)',
+        clipPath:
+          'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+        border: isWinner
+          ? '1px solid rgba(250, 204, 21, 0.3)'
+          : '1px solid rgba(51, 65, 85, 0.5)',
+      }}
+    >
+      {teamName}
     </div>
   )
 }
 
-/**
- * A component to render a single match card.
- */
-const MatchCard = ({ match }: { match: MatchWithScoresAndDetails }) => {
+const MatchCard = ({ match, index }: { match: MatchWithScoresAndDetails; index: number }) => {
   const winnerTeam = match.winner_team_id
     ? match.team_1?.id === match.winner_team_id
       ? match.team_1
       : match.team_2
     : null
-  console.log('🚀 ~ MatchCard ~ winnerTeam:', winnerTeam)
 
   return (
-    <div className="bg-white/90 dark:bg-[#181f2a] p-4 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-      <div className="flex justify-between items-center mb-3">
-        <h4 className="font-bold text-lg">{match.tag || 'Match'}</h4>
+    <motion.div
+      initial={{ opacity: 0, x: -30 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className="relative bg-slate-900/60 backdrop-blur-md border border-slate-700/50 p-5 overflow-hidden"
+      style={{
+        clipPath:
+          'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
+      }}
+    >
+      {/* Corner Accents */}
+      <div
+        className="absolute top-0 right-0 w-4 h-4 pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)',
+        }}
+      />
+      <div
+        className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none"
+        style={{
+          background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)',
+        }}
+      />
+
+      {/* Match Header */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          <Zap className="w-4 h-4 text-cyan-400" />
+          <span className="text-xs font-mono uppercase tracking-wider text-cyan-400">
+            {match.tag || 'Match'}
+          </span>
+        </div>
         {winnerTeam && (
-          <div className="flex items-center gap-2 text-sm font-semibold text-yellow-500">
-            <Trophy size={16} />
-            <span>Winner</span>
-            <span>{}</span>
+          <div className="flex items-center gap-2">
+            <Trophy size={14} className="text-yellow-400" />
+            <span className="text-xs font-mono uppercase tracking-wider text-yellow-400">
+              Winner Declared
+            </span>
           </div>
         )}
       </div>
 
-      <div className="flex items-end justify-around mb-4 h-16">
-        <div
-          className={`w-2/5  flex flex-col items-center ${
-            winnerTeam?.id === match.team_1?.id ? 'font-bold ' : ''
-          }`}
-        >
+      {/* Teams Display */}
+      <div className="flex items-center justify-center gap-4 mb-4">
+        <div className="flex flex-col items-center gap-2 flex-1 relative">
           {winnerTeam?.id === match.team_1?.id && (
-            <Crown size={21} color="gold" className="" />
+            <Crown
+              size={20}
+              className="text-yellow-400 absolute -top-6 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]"
+            />
           )}
-          <TeamDisplay team={match.team_1} className=" text-sm font-semibold" />
+          <TeamDisplay
+            team={match.team_1}
+            isWinner={winnerTeam?.id === match.team_1?.id}
+          />
         </div>
-        <div className="text-gray-400 font-bold text-xl">VS</div>
-        <div
-          className={`w-2/5 flex flex-col items-center ${
-            winnerTeam?.id === match.team_2?.id ? 'font-bold' : ''
-          }`}
-        >
-          {winnerTeam?.id === match.team_2?.id && (
-            <Crown size={21} color="gold" className="" />
-          )}
 
-          <TeamDisplay team={match.team_2} className=" text-sm font-semibold" />
+        <div
+          className="px-3 py-1 text-xs font-mono font-bold text-slate-500"
+          style={{
+            background: 'rgba(15, 23, 42, 0.6)',
+            clipPath:
+              'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+          }}
+        >
+          VS
+        </div>
+
+        <div className="flex flex-col items-center gap-2 flex-1 relative">
+          {winnerTeam?.id === match.team_2?.id && (
+            <Crown
+              size={20}
+              className="text-yellow-400 absolute -top-6 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]"
+            />
+          )}
+          <TeamDisplay
+            team={match.team_2}
+            isWinner={winnerTeam?.id === match.team_2?.id}
+          />
         </div>
       </div>
 
-      <div className="text-center text-sm text-gray-600 dark:text-gray-400 space-y-1">
-        {match.match_scores.map((score, index) => (
-          <div key={index}>
-            Game {index + 1}:{' '}
-            <span className="font-mono font-bold text-black dark:text-white">
-              {score.team_1_score} - {score.team_2_score}
-            </span>
+      {/* Scores */}
+      <div className="flex justify-center gap-4 text-sm font-mono">
+        {match.match_scores.map((score, idx) => (
+          <div
+            key={idx}
+            className="px-4 py-2 bg-slate-800/40 border border-slate-700/30"
+            style={{
+              clipPath:
+                'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+            }}
+          >
+            <span className="text-slate-500 text-xs">G{idx + 1}</span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-cyan-400 font-bold">{score.team_1_score}</span>
+              <span className="text-slate-600">-</span>
+              <span className="text-violet-400 font-bold">{score.team_2_score}</span>
+            </div>
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -150,94 +184,174 @@ interface TournamentDetailsProps {
 
 const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
   if (!tournament) {
-    return <div>Select a tournament to see the details.</div>
+    return (
+      <div className="text-slate-400 font-mono text-center py-12">
+        [ Select a tournament to view details ]
+      </div>
+    )
   }
 
   const winnerTeam = tournament.winner_team
 
   return (
     <div className="space-y-6">
-      {/* Tournament Header */}
-      <div className="bg-gradient-to-r from-lime-400 via-blue-500 to-purple-400 p-1 rounded-2xl shadow-lg">
-        {/* <div className="bg-[#111827] rounded-xl p-6 text-white">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-            <Trophy size={24} /> {tournament.name}
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm opacity-90">
-            <div className="flex items-center gap-2">
-              <Calendar size={16} />
-              <span>
-                {new Date(tournament.created_at).toLocaleDateString()}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users size={16} />
-              <span>{tournament.tournament_type}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ListChecks size={16} />
-              <span>{tournament.match_type}</span>
-            </div>
-          </div>
-        </div> */}
-        <div className="bg-[#111827] rounded-2xl p-5 text-white">
-          <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
-            <Trophy size={20} color="gold" /> {tournament.name}
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
-            <div className="flex items-center gap-2">
-              <Tickets size={16} />{' '}
-              <span>
-                Name: {new Date(tournament.created_at).toLocaleDateString()}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar size={16} />
-              <span>
-                Created: {new Date(tournament.created_at).toLocaleDateString()}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users size={16} />
-              <span>Type: {tournament.tournament_type}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ListChecks size={16} />
-              <span>Match Type: {tournament.match_type}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ListChecks size={16} />
-              <span>
-                Points/Game: <strong>{21}</strong>
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ListChecks size={16} />
-              <span>
-                Max Game Sets: <strong>{1}</strong>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Tournament Header Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative bg-slate-900/60 backdrop-blur-md border border-slate-700/50 p-6 overflow-hidden"
+        style={{
+          clipPath:
+            'polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px))',
+        }}
+      >
+        {/* Corner Accents */}
+        <div
+          className="absolute top-0 right-0 w-6 h-6 pointer-events-none"
+          style={{
+            background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)',
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none"
+          style={{
+            background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)',
+          }}
+        />
 
-      {/* Tournament Winner Display */}
-      {winnerTeam && (
-        <div className="p-6 bg-yellow-400 text-gray-900 rounded-2xl text-center shadow-lg">
-          <h3 className="text-2xl font-bold flex items-center justify-center gap-2">
-            <Award size={28} /> Tournament Champion! <Award size={28} />
-          </h3>
-          <div className="mt-4 -">
-            <TeamDisplay team={winnerTeam} className="text-xl font-bold" />
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="p-2"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+              clipPath:
+                'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+            }}
+          >
+            <Trophy size={24} className="text-yellow-400" />
+          </div>
+          <h2 className="text-2xl font-bold font-mono uppercase tracking-wider text-white">
+            {tournament.name}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm font-mono">
+          <div className="flex items-center gap-2 text-slate-400">
+            <Calendar size={14} className="text-cyan-400" />
+            <span>{new Date(tournament.created_at).toLocaleDateString()}</span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-400">
+            <Users size={14} className="text-blue-400" />
+            <span className="uppercase">{tournament.tournament_type}</span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-400">
+            <ListChecks size={14} className="text-violet-400" />
+            <span className="uppercase">{tournament.match_type}</span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-400">
+            <Zap size={14} className="text-cyan-400" />
+            <span>
+              Points:{' '}
+              <strong className="text-white">
+                {tournament.points_per_game || 21}
+              </strong>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-400">
+            <Target size={14} className="text-violet-400" />
+            <span>
+              Sets:{' '}
+              <strong className="text-white">
+                {tournament.max_game_set || 1}
+              </strong>
+            </span>
           </div>
         </div>
+      </motion.div>
+
+      {/* Tournament Champion */}
+      {winnerTeam && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative bg-slate-900/80 backdrop-blur-md border border-yellow-500/30 p-8 text-center overflow-hidden"
+          style={{
+            clipPath:
+              'polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px))',
+            boxShadow: '0 0 40px rgba(250, 204, 21, 0.15)',
+          }}
+        >
+          <div
+            className="absolute top-0 right-0 w-6 h-6 pointer-events-none"
+            style={{
+              background: 'linear-gradient(135deg, transparent 50%, #eab308 50%)',
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none"
+            style={{
+              background: 'linear-gradient(-45deg, transparent 50%, #eab308 50%)',
+            }}
+          />
+
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="flex justify-center gap-3 mb-4"
+          >
+            <Award size={32} className="text-yellow-400" />
+            <Trophy size={32} className="text-yellow-400" />
+            <Award size={32} className="text-yellow-400" />
+          </motion.div>
+
+          <h3 className="text-xl font-bold font-mono uppercase tracking-wider text-yellow-400 mb-4">
+            Tournament Champion
+          </h3>
+
+          <div
+            className="inline-block px-6 py-3"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(245, 158, 11, 0.2))',
+              clipPath:
+                'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)',
+              border: '2px solid rgba(250, 204, 21, 0.5)',
+            }}
+          >
+            <span className="text-xl font-bold font-mono text-white">
+              {winnerTeam.player_2
+                ? `${winnerTeam.player_1.name} & ${winnerTeam.player_2.name}`
+                : winnerTeam.player_1.name}
+            </span>
+          </div>
+        </motion.div>
       )}
 
       {/* Matches Section */}
       <div>
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Swords size={20} /> All Matches
-        </h3>
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="p-2"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+              clipPath:
+                'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+            }}
+          >
+            <Swords size={18} className="text-cyan-400" />
+          </div>
+          <h3 className="text-lg font-bold font-mono uppercase tracking-wider text-white">
+            All Matches
+          </h3>
+          <span className="text-xs font-mono text-slate-500">
+            [ {tournament.matches.length} Total ]
+          </span>
+        </div>
+
         <div className="space-y-4">
           {tournament.matches.length > 0 ? (
             tournament.matches
@@ -245,12 +359,14 @@ const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
                 (a, b) =>
                   new Date(a.created_at).getTime() -
                   new Date(b.created_at).getTime()
-              ) // Sort matches by creation date
-              .map((match) => <MatchCard key={match.id} match={match} />)
+              )
+              .map((match, index) => (
+                <MatchCard key={match.id} match={match} index={index} />
+              ))
           ) : (
-            <p className="text-gray-500">
-              No matches have been played in this tournament yet.
-            </p>
+            <div className="text-center py-8 text-slate-500 font-mono text-sm">
+              [ No matches have been played yet ]
+            </div>
           )}
         </div>
       </div>

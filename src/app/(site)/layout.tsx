@@ -30,7 +30,7 @@ export default function RootLayout({
   //   }
   // }, [])
   return (
-    <main className="min-h-screen bg-[#0a0a0a] flex flex-col">
+    <main className="min-h-screen bg-slate-950 flex flex-col hex-grid">
       <Navbar />
       {children}
     </main>

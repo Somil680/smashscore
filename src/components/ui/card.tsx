@@ -7,11 +7,25 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        "bg-slate-950/80 backdrop-blur-md text-white flex flex-col gap-6 border border-slate-800/50 py-6 shadow-[0_0_30px_rgba(0,0,0,0.3)] relative overflow-hidden",
         className
       )}
+      style={{
+        clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
+      }}
       {...props}
-    />
+    >
+      {/* Corner Accents */}
+      <div 
+        className="absolute top-0 right-0 w-4 h-4 pointer-events-none"
+        style={{ background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)' }}
+      />
+      <div 
+        className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none"
+        style={{ background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)' }}
+      />
+      {props.children}
+    </div>
   )
 }
 
@@ -32,7 +46,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
+      className={cn("leading-none font-bold font-mono uppercase tracking-wider text-white", className)}
       {...props}
     />
   )
@@ -42,7 +56,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn("text-slate-400 text-sm font-mono", className)}
       {...props}
     />
   )
