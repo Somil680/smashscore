@@ -163,6 +163,89 @@ const MatchCreateLocal = () => {
     }
   }
 
+  // Function to get all player IDs from a match
+  const getPlayerIdsFromMatch = (
+    match: (typeof currentMatches)[0]
+  ): Set<string> => {
+    const playerIds = new Set<string>()
+    if (match.team_1?.player_1?.id) {
+      playerIds.add(match.team_1.player_1.id)
+      if (match.team_1.player_2?.id) {
+        playerIds.add(match.team_1.player_2.id)
+      }
+    }
+    if (match.team_2?.player_1?.id) {
+      playerIds.add(match.team_2.player_1.id)
+      if (match.team_2.player_2?.id) {
+        playerIds.add(match.team_2.player_2.id)
+      }
+    }
+    return playerIds
+  }
+
+  // Function to check if two matches share any players
+  const hasPlayerOverlap = (
+    match1: (typeof currentMatches)[0],
+    match2: (typeof currentMatches)[0]
+  ): boolean => {
+    const players1 = getPlayerIdsFromMatch(match1)
+    const players2 = getPlayerIdsFromMatch(match2)
+    for (const playerId of players1) {
+      if (players2.has(playerId)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // Reorder matches to avoid consecutive matches with same players
+  const reorderedMatches = useMemo(() => {
+    if (currentMatches.length <= 1) return currentMatches
+
+    const reordered: typeof currentMatches = []
+    const remaining = [...currentMatches]
+
+    // Start with the first match
+    if (remaining.length > 0) {
+      reordered.push(remaining.shift()!)
+    }
+
+    // Greedy algorithm: for each position, find a match with no player overlap
+    while (remaining.length > 0) {
+      const lastMatch = reordered[reordered.length - 1]
+      let bestIndex = -1
+      let minOverlap = Infinity
+
+      // Find match with no overlap first
+      for (let i = 0; i < remaining.length; i++) {
+        if (!hasPlayerOverlap(lastMatch, remaining[i])) {
+          bestIndex = i
+          break
+        }
+        // If overlap exists, count overlapping players for tie-breaking
+        const players1 = getPlayerIdsFromMatch(lastMatch)
+        const players2 = getPlayerIdsFromMatch(remaining[i])
+        let overlapCount = 0
+        for (const playerId of players1) {
+          if (players2.has(playerId)) {
+            overlapCount++
+          }
+        }
+        if (overlapCount < minOverlap) {
+          minOverlap = overlapCount
+          bestIndex = i
+        }
+      }
+
+      // If no match found (shouldn't happen), use first remaining
+      if (bestIndex === -1) bestIndex = 0
+
+      reordered.push(remaining.splice(bestIndex, 1)[0])
+    }
+
+    return reordered
+  }, [currentMatches])
+
   const TopTeams = teamStats
     .sort((a, b) => b.pointDifference - a.pointDifference)
     .map((team) => team.team.team)
@@ -209,25 +292,32 @@ const MatchCreateLocal = () => {
         animate={{ opacity: 1, y: 0 }}
         className="relative bg-slate-900/60 backdrop-blur-md border border-slate-700/50 p-6 overflow-hidden"
         style={{
-          clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
+          clipPath:
+            'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
         }}
       >
         {/* Corner Accents */}
-        <div 
+        <div
           className="absolute top-0 right-0 w-5 h-5 pointer-events-none"
-          style={{ background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)' }}
+          style={{
+            background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)',
+          }}
         />
-        <div 
+        <div
           className="absolute bottom-0 left-0 w-5 h-5 pointer-events-none"
-          style={{ background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)' }}
+          style={{
+            background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)',
+          }}
         />
 
         <div className="flex items-center gap-3 mb-4">
           <div
             className="p-2"
             style={{
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
-              clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+              background:
+                'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+              clipPath:
+                'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
               border: '1px solid rgba(6, 182, 212, 0.3)',
             }}
           >
@@ -241,11 +331,15 @@ const MatchCreateLocal = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm font-mono">
           <div className="flex items-center gap-2 text-slate-400">
             <Calendar size={14} className="text-cyan-400" />
-            <span>{new Date(currentTournament.created_at).toLocaleDateString()}</span>
+            <span>
+              {new Date(currentTournament.created_at).toLocaleDateString()}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-slate-400">
             <Users size={14} className="text-blue-400" />
-            <span className="uppercase">{currentTournament.tournament_type}</span>
+            <span className="uppercase">
+              {currentTournament.tournament_type}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-slate-400">
             <ListChecks size={14} className="text-violet-400" />
@@ -253,18 +347,28 @@ const MatchCreateLocal = () => {
           </div>
           <div className="flex items-center gap-2 text-slate-400">
             <Zap size={14} className="text-cyan-400" />
-            <span>Points: <strong className="text-white">{currentTournament.points_per_game}</strong></span>
+            <span>
+              Points:{' '}
+              <strong className="text-white">
+                {currentTournament.points_per_game}
+              </strong>
+            </span>
           </div>
           <div className="flex items-center gap-2 text-slate-400">
             <Target size={14} className="text-violet-400" />
-            <span>Sets: <strong className="text-white">{currentTournament.max_game_set}</strong></span>
+            <span>
+              Sets:{' '}
+              <strong className="text-white">
+                {currentTournament.max_game_set}
+              </strong>
+            </span>
           </div>
         </div>
       </motion.div>
 
       {/* Match Cards */}
       <div className="space-y-4">
-        {currentMatches.map((match, index) => (
+        {reorderedMatches.map((match, index) => (
           <motion.div
             key={match.id}
             initial={{ opacity: 0, x: -30 }}
@@ -289,17 +393,24 @@ const MatchCreateLocal = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="relative bg-slate-900/80 backdrop-blur-md border border-cyan-500/30 p-8 text-center"
           style={{
-            clipPath: 'polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px))',
+            clipPath:
+              'polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px))',
             boxShadow: '0 0 40px rgba(6, 182, 212, 0.2)',
           }}
         >
-          <div 
+          <div
             className="absolute top-0 right-0 w-6 h-6 pointer-events-none"
-            style={{ background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)' }}
+            style={{
+              background:
+                'linear-gradient(135deg, transparent 50%, #06b6d4 50%)',
+            }}
           />
-          <div 
+          <div
             className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none"
-            style={{ background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)' }}
+            style={{
+              background:
+                'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)',
+            }}
           />
 
           <motion.div
@@ -327,7 +438,8 @@ const MatchCreateLocal = () => {
             className="px-8 py-4 font-bold font-mono uppercase tracking-wider text-slate-950 disabled:opacity-50"
             style={{
               background: 'linear-gradient(135deg, #10b981, #06b6d4)',
-              clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)',
+              clipPath:
+                'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)',
               boxShadow: '0 0 30px rgba(16, 185, 129, 0.4)',
             }}
           >
@@ -362,7 +474,7 @@ const MatchCreateLocal = () => {
               )
               if (!participantInfo) return null
               const teamDetails = getTeamDetails(participantInfo.team)
-              
+
               return (
                 <motion.div
                   key={team.id}
@@ -371,18 +483,24 @@ const MatchCreateLocal = () => {
                   transition={{ delay: index * 0.05 }}
                   className="relative bg-slate-900/60 backdrop-blur-md border border-slate-700/50 p-3"
                   style={{
-                    clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
+                    clipPath:
+                      'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
                   }}
                 >
                   {/* Rank Badge */}
                   <div
                     className="absolute -top-1 -left-1 w-6 h-6 flex items-center justify-center text-xs font-bold font-mono"
                     style={{
-                      background: index === 0 ? 'linear-gradient(135deg, #eab308, #f59e0b)' 
-                        : index === 1 ? 'linear-gradient(135deg, #9ca3af, #6b7280)'
-                        : index === 2 ? 'linear-gradient(135deg, #d97706, #b45309)'
-                        : 'linear-gradient(135deg, #475569, #334155)',
-                      clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
+                      background:
+                        index === 0
+                          ? 'linear-gradient(135deg, #eab308, #f59e0b)'
+                          : index === 1
+                          ? 'linear-gradient(135deg, #9ca3af, #6b7280)'
+                          : index === 2
+                          ? 'linear-gradient(135deg, #d97706, #b45309)'
+                          : 'linear-gradient(135deg, #475569, #334155)',
+                      clipPath:
+                        'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                       color: '#020617',
                     }}
                   >
@@ -394,11 +512,10 @@ const MatchCreateLocal = () => {
                   </h4>
                   <div className="flex justify-between mt-2 text-xs font-mono">
                     <span className="text-cyan-400">
-                      PTS: {team.pointDifference > 0 ? '+' : ''}{team.pointDifference}
+                      PTS: {team.pointDifference > 0 ? '+' : ''}
+                      {team.pointDifference}
                     </span>
-                    <span className="text-violet-400">
-                      W: {team.wins}
-                    </span>
+                    <span className="text-violet-400">W: {team.wins}</span>
                   </div>
                 </motion.div>
               )

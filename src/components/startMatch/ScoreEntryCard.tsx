@@ -69,7 +69,9 @@ export default function ScoreEntryCard({
     const winsB = scoresB.filter((b, i) => b > scoresA[i]).length
 
     if (winsA === winsB) {
-      alert('A match cannot end in a draw. Please ensure one team has more game wins.')
+      alert(
+        'A match cannot end in a draw. Please ensure one team has more game wins.'
+      )
       return
     }
 
@@ -94,22 +96,28 @@ export default function ScoreEntryCard({
       transition={{ duration: 0.5 }}
       className="relative overflow-hidden bg-slate-900/60 backdrop-blur-md border border-slate-700/50 p-6"
       style={{
-        clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
+        clipPath:
+          'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
         boxShadow: completed ? '0 0 30px rgba(6, 182, 212, 0.2)' : 'none',
-        borderColor: completed ? 'rgba(6, 182, 212, 0.5)' : 'rgba(51, 65, 85, 0.5)',
+        borderColor: completed
+          ? 'rgba(6, 182, 212, 0.5)'
+          : 'rgba(51, 65, 85, 0.5)',
       }}
     >
       {/* Corner Accents */}
-      <div 
+      <div
         className="absolute top-0 right-0 w-4 h-4 pointer-events-none"
-        style={{ background: completed 
-          ? 'linear-gradient(135deg, transparent 50%, #10b981 50%)' 
-          : 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)' 
+        style={{
+          background: completed
+            ? 'linear-gradient(135deg, transparent 50%, #10b981 50%)'
+            : 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)',
         }}
       />
-      <div 
+      <div
         className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none"
-        style={{ background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)' }}
+        style={{
+          background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)',
+        }}
       />
 
       {/* Match Tag Header */}
@@ -141,25 +149,31 @@ export default function ScoreEntryCard({
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="absolute -top-8"
             >
-              <Crown size={28} className="text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />
+              <Crown
+                size={28}
+                className="text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]"
+              />
             </motion.div>
           )}
           <div
             className={`px-4 py-2 font-mono font-bold text-sm uppercase tracking-wider text-center transition-all ${
-              winner === team1Details.teamId 
-                ? 'text-yellow-400' 
-                : winner && winner !== team1Details.teamId 
-                ? 'text-slate-500' 
+              winner === team1Details.teamId
+                ? 'text-yellow-400'
+                : winner && winner !== team1Details.teamId
+                ? 'text-slate-500'
                 : 'text-white'
             }`}
             style={{
-              background: winner === team1Details.teamId 
-                ? 'linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(245, 158, 11, 0.1))' 
-                : 'rgba(15, 23, 42, 0.4)',
-              clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
-              border: winner === team1Details.teamId 
-                ? '1px solid rgba(250, 204, 21, 0.3)' 
-                : '1px solid rgba(51, 65, 85, 0.5)',
+              background:
+                winner === team1Details.teamId
+                  ? 'linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(245, 158, 11, 0.1))'
+                  : 'rgba(15, 23, 42, 0.4)',
+              clipPath:
+                'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+              border:
+                winner === team1Details.teamId
+                  ? '1px solid rgba(250, 204, 21, 0.3)'
+                  : '1px solid rgba(51, 65, 85, 0.5)',
             }}
           >
             {team1Details.teamName}
@@ -171,7 +185,8 @@ export default function ScoreEntryCard({
           className="px-3 py-1 text-xs font-mono font-bold text-slate-500"
           style={{
             background: 'rgba(15, 23, 42, 0.6)',
-            clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+            clipPath:
+              'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
             border: '1px solid rgba(51, 65, 85, 0.3)',
           }}
         >
@@ -187,25 +202,31 @@ export default function ScoreEntryCard({
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="absolute -top-8"
             >
-              <Crown size={28} className="text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />
+              <Crown
+                size={28}
+                className="text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]"
+              />
             </motion.div>
           )}
           <div
             className={`px-4 py-2 font-mono font-bold text-sm uppercase tracking-wider text-center transition-all ${
-              winner === team2Details.teamId 
-                ? 'text-yellow-400' 
-                : winner && winner !== team2Details.teamId 
-                ? 'text-slate-500' 
+              winner === team2Details.teamId
+                ? 'text-yellow-400'
+                : winner && winner !== team2Details.teamId
+                ? 'text-slate-500'
                 : 'text-white'
             }`}
             style={{
-              background: winner === team2Details.teamId 
-                ? 'linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(245, 158, 11, 0.1))' 
-                : 'rgba(15, 23, 42, 0.4)',
-              clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
-              border: winner === team2Details.teamId 
-                ? '1px solid rgba(250, 204, 21, 0.3)' 
-                : '1px solid rgba(51, 65, 85, 0.5)',
+              background:
+                winner === team2Details.teamId
+                  ? 'linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(245, 158, 11, 0.1))'
+                  : 'rgba(15, 23, 42, 0.4)',
+              clipPath:
+                'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+              border:
+                winner === team2Details.teamId
+                  ? '1px solid rgba(250, 204, 21, 0.3)'
+                  : '1px solid rgba(51, 65, 85, 0.5)',
             }}
           >
             {team2Details.teamName}
@@ -224,7 +245,8 @@ export default function ScoreEntryCard({
               onChange={(e) => handleChange(i, e.target.value, 'a')}
               className="w-16 h-12 bg-slate-800/60 border border-slate-600/50 text-center font-mono font-bold text-lg text-cyan-400 focus:border-cyan-500 focus:outline-none focus:ring-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                clipPath:
+                  'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
               }}
               disabled={completed}
               placeholder="0"
@@ -235,7 +257,8 @@ export default function ScoreEntryCard({
               className="px-3 py-1 text-xs font-mono uppercase tracking-wider text-slate-500"
               style={{
                 background: 'rgba(15, 23, 42, 0.4)',
-                clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
+                clipPath:
+                  'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
               }}
             >
               G{i + 1}
@@ -248,7 +271,8 @@ export default function ScoreEntryCard({
               onChange={(e) => handleChange(i, e.target.value, 'b')}
               className="w-16 h-12 bg-slate-800/60 border border-slate-600/50 text-center font-mono font-bold text-lg text-violet-400 focus:border-violet-500 focus:outline-none focus:ring-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                clipPath:
+                  'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
               }}
               disabled={completed}
               placeholder="0"
@@ -266,13 +290,14 @@ export default function ScoreEntryCard({
         disabled={completed || !match.team_1 || !match.team_2}
         className="w-full py-3 font-bold font-mono uppercase tracking-wider text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
-          background: completed 
-            ? 'linear-gradient(135deg, #10b981, #059669)' 
+          background: completed
+            ? 'linear-gradient(135deg, #10b981, #059669)'
             : 'linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6)',
           color: '#020617',
-          clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)',
-          boxShadow: completed 
-            ? '0 0 20px rgba(16, 185, 129, 0.4)' 
+          clipPath:
+            'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)',
+          boxShadow: completed
+            ? '0 0 20px rgba(16, 185, 129, 0.4)'
             : '0 0 20px rgba(6, 182, 212, 0.3)',
         }}
       >

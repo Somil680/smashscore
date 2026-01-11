@@ -6,7 +6,9 @@ import { CreatePlayerDTO } from '@/store/type'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Zap, Target, Activity, TrendingUp } from 'lucide-react'
+import { Zap, Target, Activity, TrendingUp, Trophy, X } from 'lucide-react'
+import useLocalTournamentStore from '@/store/useLocalTournamentStore'
+import Link from 'next/link'
 
 // Mecha Card Component with chamfered corners
 const MechaCard = ({
@@ -100,6 +102,143 @@ const MechaCard = ({
   )
 }
 
+// Active Tournament Card Component
+const ActiveTournamentCard = () => {
+  const {
+    currentTournament,
+    currentTournamentParticipants,
+    currentMatches,
+    clearLocalTournament,
+  } = useLocalTournamentStore()
+
+  if (!currentTournament) return null
+
+  const completedMatches = currentMatches.filter((m) => m.winner_team_id).length
+  const totalMatches = currentMatches.length
+  const matchTypeLabel = currentTournament.match_type === 'singles' ? 'Singles' : 'Doubles'
+
+  const handleCancel = () => {
+    if (confirm('Are you sure you want to cancel this tournament? All progress will be lost.')) {
+      clearLocalTournament()
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="max-w-4xl md:mx-auto px-4 mb-8"
+    >
+      <div
+        className="relative bg-slate-900/80 backdrop-blur-md border border-slate-700/50 p-6 overflow-hidden group"
+        style={{
+          clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
+        }}
+      >
+        {/* Glow effect */}
+        <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-10 group-hover:opacity-20 transition-all duration-500 bg-cyan-400" />
+
+        {/* Corner accent */}
+        <div
+          className="absolute top-0 right-0 w-5 h-5"
+          style={{
+            background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)',
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-5 h-5"
+          style={{
+            background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)',
+          }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="p-3 border"
+                style={{
+                  borderColor: '#06b6d440',
+                  backgroundColor: '#06b6d410',
+                  clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+                }}
+              >
+                <Trophy className="w-6 h-6 text-cyan-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white font-mono uppercase tracking-wide">
+                  {currentTournament.name}
+                </h3>
+                <p className="text-slate-400 font-mono text-xs uppercase tracking-wider mt-1">
+                  Active Tournament
+                </p>
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleCancel}
+              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded transition-colors"
+              title="Cancel Tournament"
+            >
+              <X className="w-5 h-5" />
+            </motion.button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="flex flex-col">
+              <span className="text-slate-400 font-mono text-xs uppercase tracking-wider mb-1">
+                Match Type
+              </span>
+              <span className="text-white font-bold font-mono text-sm">{matchTypeLabel}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-slate-400 font-mono text-xs uppercase tracking-wider mb-1">
+                Participants
+              </span>
+              <span className="text-white font-bold font-mono text-sm">
+                {currentTournamentParticipants.length}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-slate-400 font-mono text-xs uppercase tracking-wider mb-1">
+                Matches
+              </span>
+              <span className="text-white font-bold font-mono text-sm">
+                {completedMatches}/{totalMatches}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-slate-400 font-mono text-xs uppercase tracking-wider mb-1">
+                Points/Game
+              </span>
+              <span className="text-white font-bold font-mono text-sm">
+                {currentTournament.points_per_game}
+              </span>
+            </div>
+          </div>
+
+          <Link href="/start-match">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full px-4 py-3 font-bold font-mono text-sm uppercase tracking-wider text-slate-950 transition-all duration-300"
+              style={{
+                background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+                clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+              }}
+            >
+              Continue Tournament
+            </motion.button>
+          </Link>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function Home() {
   const { addPlayer } = usePlayerStore()
   const user = useAuthStore((s) => s.user)
@@ -123,6 +262,9 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-950">
       <HeroBanner />
+
+      {/* Active Tournament Card */}
+      <ActiveTournamentCard />
 
       {/* Stats Section */}
       <section className="relative py-24 px-4 bg-slate-950">
