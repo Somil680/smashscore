@@ -1,5 +1,6 @@
 // utils/generateFixtures.ts
 
+import { rearrangeObjects } from "@/hooks/rearrangeInPlace"
 
 export interface Team {
   id: string
@@ -49,7 +50,8 @@ export function generateFixtures(
       }
     }
   }
-
-  return fixtures
+   const allMatches = rearrangeObjects(fixtures)
+   console.log("🚀 ~ generateFixtures ~ allMatches:", allMatches)
+  return allMatches
 }
 

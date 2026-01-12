@@ -14,7 +14,7 @@ interface PlayerCardProps {
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
   const { fetchPlayers } = usePlayerStore()
-  
+
   const handleActiveStatus = async (player: Player) => {
     const { error } = await supabase
       .from('players')
@@ -31,17 +31,22 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
       whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)' }}
       className="relative bg-slate-900/80 backdrop-blur-md border border-slate-700/50 p-4 overflow-hidden group"
       style={{
-        clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
+        clipPath:
+          'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
       }}
     >
       {/* Corner Accents */}
-      <div 
+      <div
         className="absolute top-0 right-0 w-4 h-4 pointer-events-none"
-        style={{ background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)' }}
+        style={{
+          background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)',
+        }}
       />
-      <div 
+      <div
         className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none"
-        style={{ background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)' }}
+        style={{
+          background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)',
+        }}
       />
 
       {/* Glow effect */}
@@ -50,14 +55,15 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
       <div className="flex justify-between items-center relative z-10">
         {/* Player Image + Name */}
         <div className="flex items-center gap-4">
-          <div 
+          <div
             className="relative"
             style={{
               padding: '2px',
-              background: player.active 
-                ? 'linear-gradient(135deg, #06b6d4, #8b5cf6)' 
+              background: player.active
+                ? 'linear-gradient(135deg, #06b6d4, #8b5cf6)'
                 : 'linear-gradient(135deg, #475569, #64748b)',
-              clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+              clipPath:
+                'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
             }}
           >
             <Image
@@ -67,7 +73,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
               height={56}
               className="object-cover bg-slate-800"
               style={{
-                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                clipPath:
+                  'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
               }}
             />
           </div>
@@ -77,7 +84,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
               {player.name}
             </h2>
             <p className="text-xs font-mono text-slate-500 uppercase tracking-wider">
-              Joined: {new Date(player.created_at).toLocaleDateString()}
+              Joined: {new Date(player.created_at).toLocaleDateString('en-GB')}
             </p>
           </div>
         </div>

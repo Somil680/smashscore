@@ -183,68 +183,6 @@ const MatchCreateLocal = () => {
     return playerIds
   }
 
-  // Function to check if two matches share any players
-  const hasPlayerOverlap = (
-    match1: (typeof currentMatches)[0],
-    match2: (typeof currentMatches)[0]
-  ): boolean => {
-    const players1 = getPlayerIdsFromMatch(match1)
-    const players2 = getPlayerIdsFromMatch(match2)
-    for (const playerId of players1) {
-      if (players2.has(playerId)) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Reorder matches to avoid consecutive matches with same players
-  const reorderedMatches = useMemo(() => {
-    if (currentMatches.length <= 1) return currentMatches
-
-    const reordered: typeof currentMatches = []
-    const remaining = [...currentMatches]
-
-    // Start with the first match
-    if (remaining.length > 0) {
-      reordered.push(remaining.shift()!)
-    }
-
-    // Greedy algorithm: for each position, find a match with no player overlap
-    while (remaining.length > 0) {
-      const lastMatch = reordered[reordered.length - 1]
-      let bestIndex = -1
-      let minOverlap = Infinity
-
-      // Find match with no overlap first
-      for (let i = 0; i < remaining.length; i++) {
-        if (!hasPlayerOverlap(lastMatch, remaining[i])) {
-          bestIndex = i
-          break
-        }
-        // If overlap exists, count overlapping players for tie-breaking
-        const players1 = getPlayerIdsFromMatch(lastMatch)
-        const players2 = getPlayerIdsFromMatch(remaining[i])
-        let overlapCount = 0
-        for (const playerId of players1) {
-          if (players2.has(playerId)) {
-            overlapCount++
-          }
-        }
-        if (overlapCount < minOverlap) {
-          minOverlap = overlapCount
-          bestIndex = i
-        }
-      }
-
-      // If no match found (shouldn't happen), use first remaining
-      if (bestIndex === -1) bestIndex = 0
-
-      reordered.push(remaining.splice(bestIndex, 1)[0])
-    }
-
-    return reordered
-  }, [currentMatches])
 
   const TopTeams = teamStats
     .sort((a, b) => b.pointDifference - a.pointDifference)
@@ -332,7 +270,9 @@ const MatchCreateLocal = () => {
           <div className="flex items-center gap-2 text-slate-400">
             <Calendar size={14} className="text-cyan-400" />
             <span>
-              {new Date(currentTournament.created_at).toLocaleDateString()}
+              {new Date(currentTournament.created_at).toLocaleDateString(
+                'en-GB'
+              )}
             </span>
           </div>
           <div className="flex items-center gap-2 text-slate-400">
@@ -368,7 +308,7 @@ const MatchCreateLocal = () => {
 
       {/* Match Cards */}
       <div className="space-y-4">
-        {reorderedMatches.map((match, index) => (
+        {currentMatches.map((match, index) => (
           <motion.div
             key={match.id}
             initial={{ opacity: 0, x: -30 }}

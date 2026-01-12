@@ -1,7 +1,7 @@
 // components/TournamentDetails.tsx
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Trophy,
   Calendar,
@@ -12,6 +12,9 @@ import {
   Zap,
   Crown,
   Target,
+  Copy,
+  Check,
+  Bookmark,
 } from 'lucide-react'
 import {
   TeamWithPlayers,
@@ -60,7 +63,13 @@ const TeamDisplay = ({
   )
 }
 
-const MatchCard = ({ match, index }: { match: MatchWithScoresAndDetails; index: number }) => {
+const MatchCard = ({
+  match,
+  index,
+}: {
+  match: MatchWithScoresAndDetails
+  index: number
+}) => {
   const winnerTeam = match.winner_team_id
     ? match.team_1?.id === match.winner_team_id
       ? match.team_1
@@ -93,7 +102,7 @@ const MatchCard = ({ match, index }: { match: MatchWithScoresAndDetails; index: 
       />
 
       {/* Match Header */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-cyan-400" />
           <span className="text-xs font-mono uppercase tracking-wider text-cyan-400">
@@ -163,9 +172,13 @@ const MatchCard = ({ match, index }: { match: MatchWithScoresAndDetails; index: 
           >
             <span className="text-slate-500 text-xs">G{idx + 1}</span>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-cyan-400 font-bold">{score.team_1_score}</span>
+              <span className="text-cyan-400 font-bold">
+                {score.team_1_score}
+              </span>
               <span className="text-slate-600">-</span>
-              <span className="text-violet-400 font-bold">{score.team_2_score}</span>
+              <span className="text-violet-400 font-bold">
+                {score.team_2_score}
+              </span>
             </div>
           </div>
         ))}
@@ -183,6 +196,16 @@ interface TournamentDetailsProps {
 }
 
 const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
+  const [copied, setCopied] = useState(false)
+  const [keepOpened, setKeepOpened] = useState(false)
+
+  // Detect if user is on mobile
+  const isMobile =
+    typeof window !== 'undefined' &&
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    )
+
   if (!tournament) {
     return (
       <div className="text-slate-400 font-mono text-center py-12">
@@ -192,6 +215,111 @@ const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
   }
 
   const winnerTeam = tournament.winner_team
+
+  // Generate formatted summary text
+  const generateSummaryText = () => {
+    const date = new Date(tournament.created_at).toLocaleDateString('en-GB')
+    let text = `Date: ${date} | Tournament: ${tournament.name}\n\n`
+
+    const sortedMatches = [...tournament.matches].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+
+    sortedMatches.forEach((match, index) => {
+      const team1Name = match.team_1?.player_2
+        ? `${match.team_1.player_1.name} & ${match.team_1.player_2.name}`
+        : match.team_1?.player_1.name || 'TBA'
+      const team2Name = match.team_2?.player_2
+        ? `${match.team_2.player_1.name} & ${match.team_2.player_2.name}`
+        : match.team_2?.player_1.name || 'TBA'
+
+      text += `${index + 1}. ${team1Name} ⚔️ ${team2Name}\n`
+
+      if (match.match_scores && match.match_scores.length > 0) {
+        const scores = match.match_scores
+          .map((s) => `${s.team_1_score} vs ${s.team_2_score}`)
+          .join(' | ')
+        text += `   Score: ${scores}\n`
+      } else {
+        text += `   Score: __ vs __\n`
+      }
+      text += '\n'
+    })
+
+    return text
+  }
+
+  const handleCopy = async () => {
+    const text = generateSummaryText()
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  const handleSaveToGoogleKeep = async () => {
+    // First copy the text to clipboard
+    const text = generateSummaryText()
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+
+      // Detect mobile device
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        )
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      const isAndroid = /Android/.test(navigator.userAgent)
+
+      if (isMobile) {
+        if (isIOS) {
+          // Try iOS app first, fallback to website
+          const iosAppUrl = 'comgooglekeep://'
+          const iosWebUrl = 'https://keep.google.com/'
+
+          // Try to open app
+          window.location.href = iosAppUrl
+
+          // Fallback to web after a short delay if app doesn't open
+          setTimeout(() => {
+            window.open(iosWebUrl, '_blank')
+          }, 500)
+        } else if (isAndroid) {
+          // Try Android app first, fallback to website
+          const androidAppUrl = 'com.google.android.keep://'
+          const androidWebUrl = 'https://keep.google.com/'
+
+          // Try to open app
+          window.location.href = androidAppUrl
+
+          // Fallback to web after a short delay if app doesn't open
+          setTimeout(() => {
+            window.open(androidWebUrl, '_blank')
+          }, 500)
+        } else {
+          // Other mobile devices - open website
+          window.open('https://keep.google.com/', '_blank')
+        }
+      } else {
+        // Desktop - open website in new tab
+        window.open('https://keep.google.com/', '_blank')
+      }
+
+      setKeepOpened(true)
+      setTimeout(() => {
+        setKeepOpened(false)
+        setCopied(false)
+      }, 5000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      alert('Failed to copy text. Please try again.')
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -240,7 +368,9 @@ const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm font-mono">
           <div className="flex items-center gap-2 text-slate-400">
             <Calendar size={14} className="text-cyan-400" />
-            <span>{new Date(tournament.created_at).toLocaleDateString()}</span>
+            <span>
+              {new Date(tournament.created_at).toLocaleDateString('en-GB')}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-slate-400">
             <Users size={14} className="text-blue-400" />
@@ -286,13 +416,15 @@ const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
           <div
             className="absolute top-0 right-0 w-6 h-6 pointer-events-none"
             style={{
-              background: 'linear-gradient(135deg, transparent 50%, #eab308 50%)',
+              background:
+                'linear-gradient(135deg, transparent 50%, #eab308 50%)',
             }}
           />
           <div
             className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none"
             style={{
-              background: 'linear-gradient(-45deg, transparent 50%, #eab308 50%)',
+              background:
+                'linear-gradient(-45deg, transparent 50%, #eab308 50%)',
             }}
           />
 
@@ -370,6 +502,174 @@ const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
           )}
         </div>
       </div>
+
+      {/* Tournament Summary Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="relative bg-slate-900/60 backdrop-blur-md border border-slate-700/50 p-6 overflow-hidden"
+        style={{
+          clipPath:
+            'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
+        }}
+      >
+        {/* Corner Accents */}
+        <div
+          className="absolute top-0 right-0 w-5 h-5 pointer-events-none"
+          style={{
+            background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)',
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-5 h-5 pointer-events-none"
+          style={{
+            background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)',
+          }}
+        />
+
+        {/* Header with Copy and Google Keep Buttons */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-bold font-mono uppercase tracking-wider text-white">
+            Summary
+          </h3>
+          <div className="flex items-center gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleCopy}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-mono uppercase tracking-wider transition-all"
+              style={{
+                background: copied
+                  ? 'linear-gradient(135deg, #10b981, #059669)'
+                  : 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+                clipPath:
+                  'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                border: '1px solid rgba(6, 182, 212, 0.3)',
+                color: copied ? '#fff' : '#06b6d4',
+              }}
+            >
+              {copied ? (
+                <>
+                  <Check size={16} />
+                  {/* Copied! */}
+                </>
+              ) : (
+                <>
+                  <Copy size={16} />
+                  {/* Copy */}
+                </>
+              )}
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSaveToGoogleKeep}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-mono uppercase tracking-wider transition-all"
+              style={{
+                background: keepOpened
+                  ? 'linear-gradient(135deg, #fbbf24, #f59e0b)'
+                  : 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2))',
+                clipPath:
+                  'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                border: '1px solid rgba(251, 191, 36, 0.3)',
+                color: keepOpened ? '#fff' : '#fbbf24',
+              }}
+            >
+              <Bookmark size={16} />
+              {keepOpened ? 'Keep Opened!' : 'Save to Keep'}
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Instructions when Keep is opened */}
+        {keepOpened && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded"
+            style={{
+              clipPath:
+                'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+            }}
+          >
+            <p className="text-xs font-mono text-amber-400">
+              📋 Content copied!{' '}
+              {isMobile
+                ? 'In Google Keep app, long-press and select "Paste" to add the tournament summary.'
+                : 'In Google Keep, press Ctrl+V (or Cmd+V on Mac) to paste the tournament summary.'}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Summary Content */}
+        <div className="space-y-4 font-mono text-sm">
+          {/* Date and Tournament Name */}
+          <div className="pb-4 border-b border-slate-700/50">
+            <div className="flex items-center gap-2 text-slate-400 mb-1">
+              <Calendar size={14} className="text-cyan-400" />
+              <span>
+                {new Date(tournament.created_at).toLocaleDateString('en-GB')}
+              </span>
+            </div>
+            <div className="text-white font-bold uppercase tracking-wider mt-2">
+              {tournament.name}
+            </div>
+          </div>
+
+          {/* Matches List */}
+          <div className="space-y-3">
+            {tournament.matches
+              .sort(
+                (a, b) =>
+                  new Date(a.created_at).getTime() -
+                  new Date(b.created_at).getTime()
+              )
+              .map((match, index) => {
+                const team1Name = match.team_1?.player_2
+                  ? `${match.team_1.player_1.name} & ${match.team_1.player_2.name}`
+                  : match.team_1?.player_1.name || 'TBA'
+                const team2Name = match.team_2?.player_2
+                  ? `${match.team_2.player_1.name} & ${match.team_2.player_2.name}`
+                  : match.team_2?.player_1.name || 'TBA'
+
+                return (
+                  <div
+                    key={match.id}
+                    className="py-3 px-4 bg-slate-800/40 border border-slate-700/30"
+                    style={{
+                      clipPath:
+                        'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-cyan-400 font-bold">
+                        {index + 1}.
+                      </span>
+                      <span className="text-white">{team1Name}</span>
+                      <span className="text-slate-500">⚔️</span>
+                      <span className="text-white">{team2Name}</span>
+                    </div>
+                    <div className="ml-6 text-slate-400">
+                      Score:{' '}
+                      {match.match_scores && match.match_scores.length > 0 ? (
+                        <span className="text-white">
+                          {match.match_scores
+                            .map(
+                              (s) => `${s.team_1_score} vs ${s.team_2_score}`
+                            )
+                            .join(' | ')}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">__ vs __</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+          </div>
+        </div>
+      </motion.div>
     </div>
   )
 }

@@ -56,8 +56,10 @@ const TournamentPage = () => {
         <div
           className="inline-flex items-center justify-center p-3 mb-4"
           style={{
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
-            clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)',
+            background:
+              'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+            clipPath:
+              'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)',
             border: '1px solid rgba(6, 182, 212, 0.3)',
           }}
         >
@@ -86,26 +88,36 @@ const TournamentPage = () => {
               const teamName = item.winner_team_id
                 ? getTeamDetails(item.winner_team)
                 : { teamName: 'Winner TBA', playerImages: [], teamId: null }
-              
+
               return (
                 <motion.div
                   key={item.id}
                   variants={itemVariants}
-                  whileHover={{ x: 8, boxShadow: '0 0 30px rgba(6, 182, 212, 0.2)' }}
+                  whileHover={{
+                    x: 8,
+                    boxShadow: '0 0 30px rgba(6, 182, 212, 0.2)',
+                  }}
                   onClick={() => handleOpenTournamentDetails(item)}
                   className="relative cursor-pointer bg-slate-900/60 backdrop-blur-md border border-slate-700/50 p-5 overflow-hidden group"
                   style={{
-                    clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
+                    clipPath:
+                      'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
                   }}
                 >
                   {/* Corner Accents */}
-                  <div 
+                  <div
                     className="absolute top-0 right-0 w-5 h-5 pointer-events-none"
-                    style={{ background: 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)' }}
+                    style={{
+                      background:
+                        'linear-gradient(135deg, transparent 50%, #06b6d4 50%)',
+                    }}
                   />
-                  <div 
+                  <div
                     className="absolute bottom-0 left-0 w-5 h-5 pointer-events-none"
-                    style={{ background: 'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)' }}
+                    style={{
+                      background:
+                        'linear-gradient(-45deg, transparent 50%, #8b5cf6 50%)',
+                    }}
                   />
 
                   {/* Glow effect */}
@@ -125,11 +137,17 @@ const TournamentPage = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm font-mono">
                       <div className="flex items-center gap-2 text-slate-400">
                         <Calendar size={14} className="text-cyan-400" />
-                        <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(item.created_at).toLocaleDateString(
+                            'en-GB'
+                          )}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-400">
                         <Users size={14} className="text-blue-400" />
-                        <span className="uppercase">{item.tournament_type}</span>
+                        <span className="uppercase">
+                          {item.tournament_type}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-400">
                         <ListChecks size={14} className="text-violet-400" />

@@ -76,12 +76,15 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         return getTeam
       })
     )
+    console.log("🚀 ~ handleNext ~ createdTeams:", createdTeams)
 
     const validTeams = (createdTeams ?? []).filter(
       (team): team is TeamWithPlayers => team !== null
     )
+    console.log("🚀 ~ handleNext ~ validTeams:", validTeams)
 
     const fixtures = generateFixtures('round-robin', validTeams)
+    console.log("🚀 ~ handleNext ~ fixtures:", fixtures)
 
     setLocalTournamentParticipants(
       validTeams.map((t) => ({
@@ -121,8 +124,10 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         <div
           className="p-2"
           style={{
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
-            clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+            background:
+              'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+            clipPath:
+              'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
             border: '1px solid rgba(6, 182, 212, 0.3)',
           }}
         >
@@ -157,22 +162,29 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
                 background: isSelected
                   ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))'
                   : 'rgba(15, 23, 42, 0.6)',
-                border: `1px solid ${isSelected ? 'rgba(6, 182, 212, 0.5)' : 'rgba(51, 65, 85, 0.5)'}`,
-                clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
-                boxShadow: isSelected ? '0 0 20px rgba(6, 182, 212, 0.3)' : 'none',
+                border: `1px solid ${
+                  isSelected
+                    ? 'rgba(6, 182, 212, 0.5)'
+                    : 'rgba(51, 65, 85, 0.5)'
+                }`,
+                clipPath:
+                  'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+                boxShadow: isSelected
+                  ? '0 0 20px rgba(6, 182, 212, 0.3)'
+                  : 'none',
               }}
               disabled={team.flatMap((t) => t).includes(player.id)}
             >
               {/* Corner accent */}
-              <div 
+              <div
                 className="absolute top-0 right-0 w-3 h-3 pointer-events-none"
-                style={{ 
-                  background: isSelected 
-                    ? 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)' 
-                    : 'linear-gradient(135deg, transparent 50%, #475569 50%)' 
+                style={{
+                  background: isSelected
+                    ? 'linear-gradient(135deg, transparent 50%, #06b6d4 50%)'
+                    : 'linear-gradient(135deg, transparent 50%, #475569 50%)',
                 }}
               />
-              
+
               <div
                 className="relative"
                 style={{
@@ -180,7 +192,8 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
                   background: isSelected
                     ? 'linear-gradient(135deg, #06b6d4, #8b5cf6)'
                     : 'linear-gradient(135deg, #475569, #64748b)',
-                  clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                  clipPath:
+                    'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
                 }}
               >
                 <Image
@@ -190,13 +203,16 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
                   height={56}
                   className="object-cover bg-slate-800"
                   style={{
-                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
+                    clipPath:
+                      'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                   }}
                 />
               </div>
-              <span className={`font-mono text-sm uppercase tracking-wider ${
-                isSelected ? 'text-cyan-400' : 'text-slate-300'
-              }`}>
+              <span
+                className={`font-mono text-sm uppercase tracking-wider ${
+                  isSelected ? 'text-cyan-400' : 'text-slate-300'
+                }`}
+              >
                 {player.name}
               </span>
             </motion.button>
@@ -210,7 +226,8 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
           className="flex-1"
           onClick={handleAddTeam}
           disabled={
-            (handleCheckMatchTypeSingle ? selected.length !== 1
+            (handleCheckMatchTypeSingle
+              ? selected.length !== 1
               : selected.length < 1 || selected.length > 2) ||
             selected.length === 0 ||
             availablePlayers.length === 0
@@ -244,7 +261,8 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-900/60 border border-slate-700/50"
                 style={{
-                  clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                  clipPath:
+                    'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
                 }}
               >
                 {t.map((pid) => {
@@ -285,7 +303,11 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         disabled={team.length === 0 || loading}
         className="mt-4"
       >
-        {loading ? <Loader2 size={24} className="animate-spin" /> : 'Generate Fixtures →'}
+        {loading ? (
+          <Loader2 size={24} className="animate-spin" />
+        ) : (
+          'Generate Fixtures →'
+        )}
       </Button>
     </motion.div>
   )
