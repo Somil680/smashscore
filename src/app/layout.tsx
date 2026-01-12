@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SmashScore App',
+  title: 'SmashScore',
   description: 'SmashScore for Badminton',
 }
 

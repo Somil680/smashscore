@@ -297,11 +297,6 @@ const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
 
           // Try to open app
           window.location.href = androidAppUrl
-
-          // Fallback to web after a short delay if app doesn't open
-          setTimeout(() => {
-            window.open(androidWebUrl, '_blank')
-          }, 1000)
         } else {
           // Other mobile devices - open website
           window.open('https://keep.google.com/', '_blank')
