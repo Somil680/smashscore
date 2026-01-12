@@ -291,7 +291,8 @@ const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
           }, 500)
         } else if (isAndroid) {
           // Try Android app first, fallback to website
-          const androidAppUrl = 'com.google.android.keep://'
+          const androidAppUrl =
+            'intent://keep.google.com/#Intent;scheme=https;package=com.google.android.keep;end;'
           const androidWebUrl = 'https://keep.google.com/'
 
           // Try to open app
@@ -300,7 +301,7 @@ const TournamentDetails = ({ tournament }: TournamentDetailsProps) => {
           // Fallback to web after a short delay if app doesn't open
           setTimeout(() => {
             window.open(androidWebUrl, '_blank')
-          }, 500)
+          }, 1000)
         } else {
           // Other mobile devices - open website
           window.open('https://keep.google.com/', '_blank')
