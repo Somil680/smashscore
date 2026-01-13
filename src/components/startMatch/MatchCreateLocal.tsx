@@ -49,6 +49,7 @@ const MatchCreateLocal = () => {
     tournamentWinner,
     getLocalTournamentData,
     clearLocalTournament,
+    deleteMatchResult,
   } = useLocalTournamentStore()
 
   const { saveBatchTournamentToSupabase } = useTournamentStore()
@@ -183,7 +184,6 @@ const MatchCreateLocal = () => {
     return playerIds
   }
 
-
   const TopTeams = teamStats
     .sort((a, b) => b.pointDifference - a.pointDifference)
     .map((team) => team.team.team)
@@ -223,7 +223,12 @@ const MatchCreateLocal = () => {
   }
 
   return (
-    <div className="space-y-6">
+      <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col gap-6 w-full max-w-lg mx-auto"
+    >
+
       {/* Tournament Info Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -318,8 +323,14 @@ const MatchCreateLocal = () => {
             <ScoreEntryCard
               match={match}
               max_game_set={currentTournament.max_game_set}
+              matchScores={currentMatchScores.filter(
+                (s) => s.match_id === match.id
+              )}
               onSave={(match, scores, winnerId) => {
                 handleSaveResult(match, scores, winnerId)
+              }}
+              onDelete={() => {
+                deleteMatchResult(match.id)
               }}
             />
           </motion.div>
@@ -462,7 +473,7 @@ const MatchCreateLocal = () => {
             })}
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

@@ -5,8 +5,6 @@ import ProgressStepper from '@/components/startMatch/ProgressStepper'
 import TeamBuilder from '@/components/startMatch/TeamBuilder'
 import usePlayerStore from '@/store/usePlayerStore'
 import useLocalTournamentStore from '@/store/useLocalTournamentStore'
-// import { useAuthStore } from '@/store/useAuthStore'
-// import { useRouter } from 'next/navigation'
 import MatchCreateLocal from '@/components/startMatch/MatchCreateLocal'
 
 const STEPS = ['Tournament', 'Players', 'Fixtures']
@@ -15,8 +13,6 @@ export default function StartMatchPage() {
   const { players } = usePlayerStore()
   const { currentTournament, currentTournamentParticipants, currentMatches } =
     useLocalTournamentStore()
-  // const user = useAuthStore((s) => s.user)
-  // const router = useRouter()
 
   // Restore step from localStorage on mount and when data changes
   useEffect(() => {
@@ -37,13 +33,6 @@ export default function StartMatchPage() {
     }
   }, [currentTournament, currentTournamentParticipants, currentMatches])
 
-  // useEffect(() => {
-  //   if (!user) {
-  //     router.push('/')
-  //   }
-  // }, [user])
-
-  // if (!user) return null
   const activePlayers = players.filter((p) => p.active)
   return (
     <div className=" flex flex-col  py-4 px-4">

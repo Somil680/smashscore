@@ -15,6 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'SmashScore',
   description: 'SmashScore for Badminton',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/android-chrome-192x192.png', // Standard icon
+    shortcut: '/android-chrome-192x192.png', // Often used by Android/Chrome
+    apple: '/android-chrome-192x192.png', // Specific for iOS
+  },
 }
 
 export default function RootLayout({

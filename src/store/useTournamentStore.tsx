@@ -52,9 +52,9 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
         )
 
         // Only filter by user_id if a user ID is provided
-        if (currentUserID) {
-          query = query.eq('user_id', currentUserID)
-        }
+        // if (currentUserID) {
+        //   query = query.eq('user_id', currentUserID)
+        // }
 
         const { data, error, count } = await query
           .order('created_at', { ascending: false })
@@ -550,6 +550,7 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
         }
       }
     },
+    // Delete match result (clear winner and scores)
   })
 )
 

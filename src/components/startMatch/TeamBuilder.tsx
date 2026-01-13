@@ -117,7 +117,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-6 max-w-4xl"
+      className="flex flex-col gap-6 w-full max-w-lg mx-auto"
     >
       {/* Header */}
       <div className="flex items-center gap-3">

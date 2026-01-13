@@ -75,6 +75,8 @@ export interface LocalTournamentActions {
 
   // Data management
   clearLocalTournament: () => void
+  deleteMatchResult: (matchId: string) => void
+
   getLocalTournamentData: () => {
     tournament: LocalTournament | null
     participants: (TournamentParticipant & { team: TeamWithPlayers })[]
@@ -249,6 +251,15 @@ const useLocalTournamentStore = create<
           matches: state.currentMatches,
           scores: state.currentMatchScores,
         }
+      },
+      deleteMatchResult: (matchId: string) => {
+        get().updateLocalMatch(matchId, { winner_team_id: undefined })
+        set((state) => ({
+          currentMatchScores: state.currentMatchScores.filter(
+            (s) => s.match_id !== matchId
+          ),
+        }))
+        get().checkAllMatchesCompleted()
       },
     }),
     {

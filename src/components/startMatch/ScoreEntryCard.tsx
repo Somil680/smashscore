@@ -1,13 +1,19 @@
 'use client'
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Crown, Zap, CheckCircle } from 'lucide-react'
+import { Crown, Zap, CheckCircle, Edit2, Edit } from 'lucide-react'
 import { getTeamDetails } from '@/hooks/helperFunction'
 import { MatchWithDetails } from '@/store/type'
 
 interface ScoreCardProps {
   match: MatchWithDetails
   max_game_set: number
+  matchScores?: {
+    game_number: number
+    team_1_score: number
+    team_2_score: number
+    match_id: string
+  }[]
   onSave: (
     match: MatchWithDetails,
     scoresToSave: {
@@ -17,12 +23,15 @@ interface ScoreCardProps {
     }[],
     winnerTeamId: string
   ) => void
+  onDelete?: () => void
 }
 
 export default function ScoreEntryCard({
   match,
   onSave,
   max_game_set,
+  matchScores = [],
+  onDelete,
 }: ScoreCardProps) {
   const team1Details = match.team_1
     ? getTeamDetails(match.team_1)
@@ -39,8 +48,29 @@ export default function ScoreEntryCard({
   )
 
   React.useEffect(() => {
-    setScoresA(Array(max_game_set).fill(0))
-    setScoresB(Array(max_game_set).fill(0))
+    // Load existing scores if available
+    if (matchScores && matchScores.length > 0) {
+      const sortedScores = [...matchScores].sort(
+        (a, b) => a.game_number - b.game_number
+      )
+      const loadedScoresA = sortedScores.map((s) => s.team_1_score)
+      const loadedScoresB = sortedScores.map((s) => s.team_2_score)
+
+      // Ensure arrays are the right length (pad with 0 if needed)
+      while (loadedScoresA.length < max_game_set) {
+        loadedScoresA.push(0)
+      }
+      while (loadedScoresB.length < max_game_set) {
+        loadedScoresB.push(0)
+      }
+
+      setScoresA(loadedScoresA.slice(0, max_game_set))
+      setScoresB(loadedScoresB.slice(0, max_game_set))
+    } else {
+      setScoresA(Array(max_game_set).fill(0))
+      setScoresB(Array(max_game_set).fill(0))
+    }
+
     if (match.winner_team_id) {
       setCompleted(true)
       setWinner(match.winner_team_id)
@@ -48,7 +78,7 @@ export default function ScoreEntryCard({
       setCompleted(false)
       setWinner(null)
     }
-  }, [max_game_set, match.id, match.winner_team_id])
+  }, [max_game_set, match.id, match.winner_team_id, matchScores])
 
   function handleChange(idx: number, val: string, which: 'a' | 'b') {
     const v = Math.max(0, parseInt(val) || 0)
@@ -64,7 +94,6 @@ export default function ScoreEntryCard({
       alert('Cannot save result, a team is not yet decided for this match.')
       return
     }
-
     const winsA = scoresA.filter((a, i) => a > scoresB[i]).length
     const winsB = scoresB.filter((b, i) => b > scoresA[i]).length
 
@@ -74,9 +103,7 @@ export default function ScoreEntryCard({
       )
       return
     }
-
     const winnerId = winsA > winsB ? team1Details.teamId : team2Details.teamId
-
     const scoresToSave = scoresA.map((s1, index) => ({
       game_number: index + 1,
       team_1_score: s1,
@@ -87,7 +114,22 @@ export default function ScoreEntryCard({
     setWinner(winnerId)
     setCompleted(true)
   }
-
+  function handleEdit() {
+    if (onDelete) {
+      if (
+        confirm(
+          'Are you sure you want to delete this match result? This action cannot be undone.'
+        )
+      ) {
+        onDelete()
+        // setScoresA(Array(max_game_set).fill(0))
+        // setScoresB(Array(max_game_set).fill(0))
+        // setWinner(null)
+        // setCompleted(false)
+        // setIsEditing(false)
+      }
+    }
+  }
   return (
     <motion.div
       layout
@@ -130,10 +172,21 @@ export default function ScoreEntryCard({
         </div>
         {completed && (
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-mono uppercase tracking-wider text-emerald-400">
-              Completed
-            </span>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-mono uppercase tracking-wider text-emerald-400">
+                Completed
+              </span>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleEdit}
+              className="p-2 text-amber-400 hover:text-amber-300 bg-amber-400/10 rounded transition-colors"
+              title="Edit Match"
+            >
+              <Edit size={16} />
+            </motion.button>
           </div>
         )}
       </div>
@@ -242,6 +295,7 @@ export default function ScoreEntryCard({
             <input
               type="number"
               min={0}
+              value={scoresA[i] || ''}
               onChange={(e) => handleChange(i, e.target.value, 'a')}
               className="w-16 h-12 bg-slate-800/60 border border-slate-600/50 text-center font-mono font-bold text-lg text-cyan-400 focus:border-cyan-500 focus:outline-none focus:ring-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
@@ -268,6 +322,7 @@ export default function ScoreEntryCard({
             <input
               type="number"
               min={0}
+              value={scoresB[i] || ''}
               onChange={(e) => handleChange(i, e.target.value, 'b')}
               className="w-16 h-12 bg-slate-800/60 border border-slate-600/50 text-center font-mono font-bold text-lg text-violet-400 focus:border-violet-500 focus:outline-none focus:ring-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
