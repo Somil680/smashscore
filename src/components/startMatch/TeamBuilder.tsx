@@ -20,13 +20,13 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
     currentTournament,
     addLocalMatch,
     setLocalTournamentParticipants,
-    loading,
+    // loading,
   } = useLocalTournamentStore()
 
   const { getOrCreateTeam } = useTeamStore()
   const [selected, setSelected] = useState<string[]>([])
   const [team, setTeams] = useState<string[][]>([])
-
+  const [loading, setLoading] = useState(false)
   const handleSelect = (player: string) => {
     setSelected((prev) =>
       prev.includes(player)
@@ -65,9 +65,11 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
 
     setTeams((prev) => [...prev, ...newTeams])
     setSelected([])
-  }
+  }  
+    
 
   const handleNext = async () => {
+    setLoading(true)
     if (!currentTournament) return
 
     const createdTeams = await Promise.all(
@@ -109,7 +111,7 @@ export default function TeamBuilder({ onNext, allPlayers }: TeamBuilderProps) {
         })
       }
     })
-
+    setLoading(false)
     onNext()
   }
 
