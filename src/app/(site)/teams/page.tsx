@@ -11,13 +11,14 @@ type TeamType = 'singles' | 'doubles'
 
 const TeamListPage = () => {
   const { teams, fetchTeams } = useTeamStore()
-  const { matches, fetchMatches } = useTournamentStore()
+  // const { matches, fetchMatches  } = useTournamentStore()
+
   const [activeTab, setActiveTab] = useState<TeamType>('singles')
 
   useEffect(() => {
     fetchTeams()
-    fetchMatches()
-  }, [fetchTeams, fetchMatches])
+    // fetchMatches()
+  }, [fetchTeams])
 
   // Filter and sort teams based on active tab and win rate
   const filteredAndSortedTeams = useMemo(() => {
@@ -28,14 +29,11 @@ const TeamListPage = () => {
     } else {
       filtered = teams.filter((team) => team.player_2_id && team.player_2)
     }
-
-    // Then sort by win rate (descending: 100% to 0%)
     return filtered.sort((a, b) => {
-      const statsA = calculateTeamStats(a.id, matches)
-      const statsB = calculateTeamStats(b.id, matches)
-      return statsB.winProbability - statsA.winProbability
+      return b.win_rate - a.win_rate
     })
-  }, [teams, activeTab, matches])
+  }, [teams, activeTab])
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -147,10 +145,9 @@ const TeamListPage = () => {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {filteredAndSortedTeams.map((team) => {
-            const stats = calculateTeamStats(team.id, matches)
             return (
               <motion.div key={team.id} variants={itemVariants}>
-                <TeamCard team={team} stats={stats} />
+                <TeamCard team={team} />
               </motion.div>
             )
           })}

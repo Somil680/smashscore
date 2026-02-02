@@ -2,21 +2,16 @@
 'use client'
 
 import React from 'react'
-import { BarChart2, Trophy, Hash, Calendar } from 'lucide-react'
+import { BarChart2, Trophy, Hash, Calendar, Percent } from 'lucide-react'
 import { TeamWithPlayers } from '@/store/type'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 
 interface TeamCardProps {
   team: TeamWithPlayers
-  stats: {
-    matchesPlayed: number
-    totalWins: number
-    winProbability: number
-  }
 }
 
-export default function TeamCard({ team, stats }: TeamCardProps) {
+export default function TeamCard({ team }: TeamCardProps) {
   const getTeamName = (team: TeamWithPlayers) => {
     if (team.player_2) {
       return `${team.player_1.name} & ${team.player_2.name}`
@@ -125,7 +120,7 @@ export default function TeamCard({ team, stats }: TeamCardProps) {
       />
 
       {/* Team Statistics */}
-      <div className="grid grid-cols-3 gap-4 text-center relative z-10">
+      <div className="grid grid-cols-4 gap-4 text-center relative z-10">
         <div>
           <div className="flex items-center justify-center gap-2 text-slate-500">
             <BarChart2 size={14} />
@@ -134,7 +129,7 @@ export default function TeamCard({ team, stats }: TeamCardProps) {
             </span>
           </div>
           <p className="text-2xl font-bold font-mono text-white mt-1">
-            {stats.matchesPlayed}
+            {team.matches_played}
           </p>
         </div>
         <div>
@@ -145,18 +140,29 @@ export default function TeamCard({ team, stats }: TeamCardProps) {
             </span>
           </div>
           <p className="text-2xl font-bold font-mono text-cyan-400 mt-1">
-            {stats.totalWins}
+            {team.matches_won}
           </p>
         </div>
         <div>
           <div className="flex items-center justify-center gap-2 text-violet-400">
             <Hash size={14} />
             <span className="text-xs font-mono uppercase tracking-wider">
-              Rate
+              Points
             </span>
           </div>
           <p className="text-2xl font-bold font-mono text-violet-400 mt-1">
-            {stats.winProbability}%
+            {team.total_points}
+          </p>
+        </div>
+        <div>
+          <div className="flex items-center justify-center gap-2 text-green-400">
+            <Percent size={14} />
+            <span className="text-xs font-mono uppercase tracking-wider">
+              Rate
+            </span>
+          </div>
+          <p className="text-2xl font-bold font-mono text-green-400 mt-1">
+            {team.win_rate}%
           </p>
         </div>
       </div>

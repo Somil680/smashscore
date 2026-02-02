@@ -12,6 +12,10 @@ export interface Team {
   player_1_id: string
   player_2_id?: string
   created_at: string
+  matches_played: number
+  matches_won: number
+  win_rate: number
+  total_points: number
 }
 
 export interface Tournament {
@@ -126,7 +130,7 @@ export interface TeamActions {
   addTeam: (teamData: CreateTeamDTO) => Promise<TeamWithPlayers | null>
   getOrCreateTeam: (
     player1Id: string,
-    player2Id?: string
+    player2Id?: string,
   ) => Promise<TeamWithPlayers | null>
 }
 
@@ -147,30 +151,33 @@ export interface TournamentState {
 }
 
 export interface TournamentActions {
-  fetchTournaments: (currentUserID: string | null | undefined, page?: number) => Promise<void>
+  fetchTournaments: (
+    currentUserID: string | null | undefined,
+    page?: number,
+  ) => Promise<void>
   fetchTournamentDetails: (tournamentId: string) => Promise<void>
   addTournament: (
-    tournamentData: CreateTournamentDTO
+    tournamentData: CreateTournamentDTO,
   ) => Promise<Tournament | null>
   addTeamToTournament: (tournamentId: string, teamId: string) => Promise<void>
   setTournamentWinner: (
     tournamentId: string,
-    winnerTeamId: string
+    winnerTeamId: string,
   ) => Promise<void>
   fetchMatchesForTournament: (tournamentId: string) => Promise<void>
   fetchMatches: () => Promise<void>
   addMatch: (matchData: CreateMatchDTO) => Promise<MatchWithDetails | null>
   updateMatch: (
     matchId: string,
-    updates: Partial<Match>
+    updates: Partial<Match>,
   ) => Promise<MatchWithDetails | null>
   finishMatch: (
     matchId: string,
     winnerTeamId: string,
-    scores: AddMatchScoreDTO[]
+    scores: AddMatchScoreDTO[],
   ) => Promise<void>
   setActiveTournamentParticipants: (
-    active: { tournament_id: string; team_id: string; team: TeamWithPlayers }[]
+    active: { tournament_id: string; team_id: string; team: TeamWithPlayers }[],
   ) => Promise<void>
 
   // Batch save functionality for local tournaments

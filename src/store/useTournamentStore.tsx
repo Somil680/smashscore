@@ -529,7 +529,9 @@ const useTournamentStore = create<TournamentState & TournamentActions>(
 
           if (winnerError) throw winnerError
         }
-
+        await supabase.rpc('calculate_team_stats_for_tournament', {
+          p_tournament_id: realTournamentId,
+        })
         set({ loading: false })
 
         return {
